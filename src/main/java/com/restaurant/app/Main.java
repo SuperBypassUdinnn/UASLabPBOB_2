@@ -2,59 +2,42 @@ package main.java.com.restaurant.app;
 
 import java.util.Scanner;
 
-import main.java.com.restaurant.model.*;
-import main.java.com.restaurant.model.menu.*;
-import main.java.com.restaurant.model.pesanan.*;
-import main.java.com.restaurant.model.transaksi.*;
-import main.java.com.restaurant.service.RestaurantSystem;
-
 public class Main {
-    public static void main(String[] args) {
 
-        RestaurantSystem rs = new RestaurantSystem();
+    public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
-        System.out.println("=== SISTEM RESTORAN ===");
+        while (true) {
+            System.out.println("\n===== SISTEM RESTORAN =====");
+            System.out.println("Pilih role:");
+            System.out.println("1. Customer");
+            System.out.println("2. Pelayan");
+            System.out.println("3. Koki");
+            System.out.println("4. Kasir");
+            System.out.println("0. Keluar");
+            System.out.print("Pilih: ");
+            int pilih = sc.nextInt();
 
-        rs.tampilMenu();
-
-        System.out.print("Pilih menu (index): ");
-        int index = sc.nextInt() - 1;
-
-        System.out.print("Jumlah: ");
-        int jumlah = sc.nextInt();
-
-        MenuItem item = rs.getMenu(index);
-
-        Pesanan p = rs.buatPesanan(1, 3);
-        p.tambahItem(new DetailPesanan(item, jumlah, ""));
-
-        System.out.println("Total pesanan: Rp" + p.getTotal());
-        System.out.println("Pilih metode pembayaran:");
-        System.out.println("1. Cash");
-        System.out.println("2. Card");
-        System.out.println("3. QRIS");
-        int pay = sc.nextInt();
-
-        Pembayaran metode;
-
-        if (pay == 1) {
-            System.out.print("Masukkan uang: ");
-            metode = new CashPayment(sc.nextDouble());
-        } else if (pay == 2) {
-            metode = new CardPayment();
-        } else {
-            metode = new QRISPayment();
+            switch (pilih) {
+                case 1:
+                    MainCustomer.main(null);
+                    break;
+                case 2:
+                    MainPelayan.main(null);
+                    break;
+                case 3:
+                    MainKoki.main(null);
+                    break;
+                case 4:
+                    MainKasir.main(null);
+                    break;
+                case 0:
+                    System.out.println("Keluar...");
+                    sc.close();
+                    return;
+                default:
+                    System.out.println("Pilihan tidak ada.");
+            }
         }
-
-        Transaksi t = new Transaksi(1001, p, metode);
-
-        if (t.konfirmasi()) {
-            Struk.cetak(t);
-        } else {
-            System.out.println("Pembayaran gagal!");
-        }
-
-        sc.close();
     }
 }

@@ -13,11 +13,23 @@ public class DetailPesanan {
         this.catatan = catatan;
     }
 
+    public int getJumlah() {
+        return jumlah;
+    }
+
+    public MenuItem getItem() {
+        return item;
+    }
+
     public double getSubtotal() {
         return item.getHarga() * jumlah;
     }
 
     public String toString() {
         return item.getNama() + " x" + jumlah + " = Rp" + getSubtotal();
+    }
+
+    public String getCatatan() {
+        return catatan;
     }
 }
