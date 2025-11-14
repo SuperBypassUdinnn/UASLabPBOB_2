@@ -1,5 +1,17 @@
 package main.java.com.restaurant.model.menu;
 
-public class Makanan {
+public class Makanan extends MenuItem {
+    private String kategori;
+    private String tingkatPedas;
 
+    public Makanan(String nama, double harga, String kategori, String tingkatPedas) {
+        super(nama, harga);
+        this.kategori = kategori;
+        this.tingkatPedas = tingkatPedas;
+    }
+
+    @Override
+    public String getInfo() {
+        return nama + " (" + kategori + ", pedas: " + tingkatPedas + ") - Rp" + harga;
+    }
 }
