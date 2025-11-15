@@ -1,10 +1,14 @@
 package main.java.com.restaurant.model.transaksi;
 
-public class CardPayment implements Pembayaran {
+public class CardPayment extends Pembayaran {
+
+    public CardPayment() {
+        this.jenisPembayaran = "Kartu Debit/Kredit";
+    }
 
     @Override
-    public boolean proses(double total) {
-        System.out.println("Pembayaran kartu berhasil (simulasi)");
+    public boolean prosesPembayaran(double total) {
+        System.out.println("Pembayaran dengan kartu berhasil.");
         return true;
     }
 }

@@ -1,30 +1,57 @@
 package main.java.com.restaurant.app;
 
 import java.util.Scanner;
+
 import main.java.com.restaurant.service.RestaurantSystem;
-import main.java.com.restaurant.model.pesanan.Pesanan;
+import main.java.com.restaurant.utils.InputUtil;
 
 public class MainKoki {
 
-    public static void main(String[] args) {
-        RestaurantSystem rs = RestaurantSystem.getInstance();
-        Scanner sc = new Scanner(System.in);
+    private static Scanner sc = InputUtil.sc;
+    private static RestaurantSystem rs = RestaurantSystem.getInstance();
 
-        System.out.println("=== MENU KOKI ===");
+    public static void run() {
+        while (true) {
+            System.out.println("\n===== MENU KOKI =====");
+            System.out.println("1. Lihat Pesanan SEDANG DIMASAK");
+            System.out.println("2. Tandai Pesanan Selesai");
+            System.out.println("0. Kembali");
+            System.out.print("Pilih: ");
 
-        rs.tampilPesananMenunggu();
+            int p = sc.nextInt();
+            sc.nextLine();
 
-        System.out.print("Masukkan ID pesanan yang selesai dimasak: ");
-        int id = sc.nextInt();
-
-        Pesanan p = rs.getPesananById(id);
-        if (p == null) {
-            System.out.println("Pesanan tidak ditemukan!");
-        } else {
-            p.setStatus("SELESAI DIMASAK");
-            System.out.println("Status pesanan diperbarui!");
+            switch (p) {
+                case 1:
+                    lihatDimasak();
+                    break;
+                case 2:
+                    selesaiDimasak();
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Pilihan tidak valid!");
+            }
         }
+    }
 
-        sc.close();
+    private static void lihatDimasak() {
+        System.out.println("\n=== PESANAN SEDANG DIMASAK ===");
+        rs.tampilPesananDenganStatus("SEDANG DIMASAK");
+    }
+
+    private static void selesaiDimasak() {
+        System.out.println("\n=== PESANAN SEDANG DIMASAK ===");
+        rs.tampilPesananDenganStatus("SEDANG DIMASAK");
+
+        System.out.print("Masukkan ID pesanan: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+
+        rs.updateStatusPesanan(id, "SELESAI DIMASAK");
+        rs.saveData();
+
+        System.out.println("Pesanan #" + id + " selesai dimasak dan siap diantar.");
     }
 }

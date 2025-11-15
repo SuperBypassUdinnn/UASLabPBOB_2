@@ -1,10 +1,14 @@
 package main.java.com.restaurant.model.transaksi;
 
-public class QRISPayment implements Pembayaran {
+public class QRISPayment extends Pembayaran {
+
+    public QRISPayment() {
+        this.jenisPembayaran = "QRIS";
+    }
 
     @Override
-    public boolean proses(double total) {
-        System.out.println("Scan QRIS berhasil (simulasi)");
+    public boolean prosesPembayaran(double total) {
+        System.out.println("QRIS berhasil diproses.");
         return true;
     }
 }

@@ -1,27 +1,62 @@
 package main.java.com.restaurant.model.transaksi;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import main.java.com.restaurant.model.pesanan.Pesanan;
 
 public class Transaksi {
-    private int id;
+
     private Pesanan pesanan;
     private Pembayaran pembayaran;
+    private double total;
+    private LocalDateTime waktu;
 
-    public Transaksi(int id, Pesanan pesanan, Pembayaran pembayaran) {
-        this.id = id;
+    public Transaksi(Pesanan pesanan, Pembayaran pembayaran) {
         this.pesanan = pesanan;
         this.pembayaran = pembayaran;
+        this.total = pesanan.getTotal();
+        this.waktu = LocalDateTime.now();
     }
 
-    public boolean konfirmasi() {
-        return pembayaran.proses(pesanan.getTotal());
-    }
-
+    // ==========================================
+    // GETTER
+    // ==========================================
     public Pesanan getPesanan() {
         return pesanan;
     }
 
-    public int getId() {
-        return id;
+    public Pembayaran getPembayaran() {
+        return pembayaran;
+    }
+
+    public double getTotal() {
+        return total;
+    }
+
+    public LocalDateTime getWaktu() {
+        return waktu;
+    }
+
+    public String getWaktuFormatted() {
+        return waktu.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    // ==========================================
+    // KONFIRMASI (dipanggil oleh customer/kasir)
+    // ==========================================
+    public boolean konfirmasi() {
+        return pembayaran.prosesPembayaran(total);
+    }
+
+    // ==========================================
+    // UNTUK STRUK (ringkas)
+    // ==========================================
+    @Override
+    public String toString() {
+        return "Transaksi Pesanan #" + pesanan.getId() +
+                " | Total: Rp" + total +
+                " | Metode: " + pembayaran.getJenis() +
+                " | Waktu: " + getWaktuFormatted();
     }
 }

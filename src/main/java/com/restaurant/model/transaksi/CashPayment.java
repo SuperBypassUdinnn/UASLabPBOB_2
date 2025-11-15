@@ -1,18 +1,24 @@
 package main.java.com.restaurant.model.transaksi;
 
-public class CashPayment implements Pembayaran {
-    private double uangDiberikan;
+public class CashPayment extends Pembayaran {
 
-    public CashPayment(double uangDiberikan) {
-        this.uangDiberikan = uangDiberikan;
+    private double jumlahUang;
+
+    public CashPayment(double jumlahUang) {
+        this.jumlahUang = jumlahUang;
+        this.jenisPembayaran = "Cash";
     }
 
     @Override
-    public boolean proses(double total) {
-        return uangDiberikan >= total;
-    }
+    public boolean prosesPembayaran(double total) {
+        if (jumlahUang < total) {
+            System.out.println("Uang tidak cukup! Total: Rp" + total + ", Anda bayar: Rp" + jumlahUang);
+            return false;
+        }
 
-    public double getKembalian(double total) {
-        return uangDiberikan - total;
+        double kembalian = jumlahUang - total;
+        System.out.println("Pembayaran cash berhasil.");
+        System.out.println("Kembalian: Rp" + kembalian);
+        return true;
     }
 }

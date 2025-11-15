@@ -2,61 +2,101 @@ package main.java.com.restaurant.app;
 
 import java.util.Scanner;
 
-import main.java.com.restaurant.service.RestaurantSystem;
-import main.java.com.restaurant.model.*;
-import main.java.com.restaurant.model.pesanan.*;
+import main.java.com.restaurant.model.pesanan.Pesanan;
 import main.java.com.restaurant.model.transaksi.*;
+import main.java.com.restaurant.model.Struk;
+import main.java.com.restaurant.service.RestaurantSystem;
+import main.java.com.restaurant.utils.InputUtil;
 
 public class MainKasir {
 
-    public static void main(String[] args) {
-        RestaurantSystem rs = RestaurantSystem.getInstance();
-        Scanner sc = new Scanner(System.in);
+    private static Scanner sc = InputUtil.sc;
+    private static RestaurantSystem rs = RestaurantSystem.getInstance();
 
-        System.out.println("=== MENU KASIR ===");
+    public static void run() {
+        while (true) {
+            System.out.println("\n===== MENU KASIR =====");
+            System.out.println("1. Lihat Pesanan Siap Bayar (SELESAI DIMASAK)");
+            System.out.println("2. Proses Pembayaran");
+            System.out.println("0. Kembali");
+            System.out.print("Pilih: ");
 
-        rs.tampilPesananSiapBayar();
+            int p = sc.nextInt();
+            sc.nextLine();
+
+            switch (p) {
+                case 1:
+                    lihatSiapBayar();
+                    break;
+                case 2:
+                    prosesPembayaran();
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Pilihan tidak valid!");
+            }
+        }
+    }
+
+    private static void lihatSiapBayar() {
+        System.out.println("\n=== PESANAN SELESAI DIMASAK ===");
+        rs.tampilPesananDenganStatus("SELESAI DIMASAK");
+    }
+
+    private static void prosesPembayaran() {
+        System.out.println("\n=== PILIH PESANAN UNTUK DIBAYAR ===");
+        rs.tampilPesananDenganStatus("SELESAI DIMASAK");
 
         System.out.print("Masukkan ID pesanan: ");
         int id = sc.nextInt();
+        sc.nextLine();
 
         Pesanan p = rs.getPesananById(id);
-        if (p == null || !p.getStatus().equals("SELESAI DIMASAK")) {
-            System.out.println("Pesanan tidak siap dibayar.");
-            sc.close();
+        if (p == null) {
+            System.out.println("ID tidak ditemukan.");
             return;
         }
 
-        System.out.println("Pilih metode pembayaran:");
+        System.out.println("Total bayar: Rp" + p.getTotal());
+        System.out.println("Metode:");
         System.out.println("1. Cash");
         System.out.println("2. Card");
         System.out.println("3. QRIS");
-        int metode = sc.nextInt();
 
-        Pembayaran pm;
+        System.out.print("Pilih metode: ");
+        int m = sc.nextInt();
+        sc.nextLine();
 
-        switch (metode) {
+        Pembayaran pb;
+
+        switch (m) {
             case 1:
-                System.out.print("Uang diberikan: ");
-                pm = new CashPayment(sc.nextDouble());
+                System.out.print("Masukkan uang: ");
+                double uang = sc.nextDouble();
+                sc.nextLine();
+                pb = new CashPayment(uang);
                 break;
             case 2:
-                pm = new CardPayment();
+                pb = new CardPayment();
+                break;
+            case 3:
+                pb = new QRISPayment();
                 break;
             default:
-                pm = new QRISPayment();
-                break;
+                System.out.println("Metode tidak valid.");
+                return;
         }
 
-        Transaksi t = rs.buatTransaksi(p, pm);
+        Transaksi t = rs.buatTransaksi(p, pb);
 
         if (t.konfirmasi()) {
             Struk.cetak(t);
-            p.setStatus("SELESAI");
+            rs.updateStatusPesanan(id, "SELESAI");
+            rs.saveData();
+            System.out.println("Pembayaran berhasil!");
         } else {
-            System.out.println("Pembayaran gagal!");
+            System.out.println("Pembayaran gagal.");
         }
-
-        sc.close();
     }
 }

@@ -3,33 +3,53 @@ package main.java.com.restaurant.model.pesanan;
 import main.java.com.restaurant.model.menu.MenuItem;
 
 public class DetailPesanan {
-    private MenuItem item;
+
+    private MenuItem menu;
     private int jumlah;
     private String catatan;
 
-    public DetailPesanan(MenuItem item, int jumlah, String catatan) {
-        this.item = item;
+    public DetailPesanan(MenuItem menu, int jumlah, String catatan) {
+        this.menu = menu;
         this.jumlah = jumlah;
         this.catatan = catatan;
+    }
+
+    public MenuItem getMenu() {
+        return menu;
+    }
+
+    public void setMenu(MenuItem menu) {
+        this.menu = menu;
     }
 
     public int getJumlah() {
         return jumlah;
     }
 
-    public MenuItem getItem() {
-        return item;
-    }
-
-    public double getSubtotal() {
-        return item.getHarga() * jumlah;
-    }
-
-    public String toString() {
-        return item.getNama() + " x" + jumlah + " = Rp" + getSubtotal();
+    public void setJumlah(int jumlah) {
+        this.jumlah = jumlah;
     }
 
     public String getCatatan() {
         return catatan;
+    }
+
+    public void setCatatan(String catatan) {
+        this.catatan = catatan;
+    }
+
+    // ===============================
+    // SUBTOTAL ITEM
+    // ===============================
+    public double getSubtotal() {
+        return menu.getHarga() * jumlah;
+    }
+
+    @Override
+    public String toString() {
+        return menu.getNama() +
+                " x" + jumlah +
+                " (Rp" + getSubtotal() + ")" +
+                (catatan != null && !catatan.isEmpty() ? " | Catatan: " + catatan : "");
     }
 }

@@ -2,41 +2,55 @@ package main.java.com.restaurant.app;
 
 import java.util.Scanner;
 
+import main.java.com.restaurant.utils.InputUtil;
+
 public class Main {
 
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
+
+        Scanner sc = InputUtil.sc;
 
         while (true) {
             System.out.println("\n===== SISTEM RESTORAN =====");
-            System.out.println("Pilih role:");
             System.out.println("1. Customer");
             System.out.println("2. Pelayan");
             System.out.println("3. Koki");
             System.out.println("4. Kasir");
             System.out.println("0. Keluar");
             System.out.print("Pilih: ");
+
+            if (!sc.hasNextInt()) {
+                System.out.println("Input tidak valid!");
+                sc.nextLine();
+                continue;
+            }
+
             int pilih = sc.nextInt();
+            sc.nextLine(); // clear buffer
 
             switch (pilih) {
                 case 1:
-                    MainCustomer.main(null);
+                    MainCustomer.run();
                     break;
+
                 case 2:
-                    MainPelayan.main(null);
+                    MainPelayan.run();
                     break;
+
                 case 3:
-                    MainKoki.main(null);
+                    MainKoki.run();
                     break;
+
                 case 4:
-                    MainKasir.main(null);
+                    MainKasir.run();
                     break;
+
                 case 0:
-                    System.out.println("Keluar...");
-                    sc.close();
+                    System.out.println("Terima kasih! Program selesai.");
                     return;
+
                 default:
-                    System.out.println("Pilihan tidak ada.");
+                    System.out.println("Pilihan tidak valid!");
             }
         }
     }
