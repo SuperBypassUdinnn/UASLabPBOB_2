@@ -136,17 +136,16 @@ public class RestaurantSystem {
     // =============================
     public void tampilPesananDenganStatus(String status) {
         boolean found = false;
-
         for (Pesanan p : daftarPesanan) {
-            if (p.getStatus().equals(status)) {
-                System.out.println(p.toString());
+            if (p.getStatus().equalsIgnoreCase(status)) {
+                System.out.println(
+                        "ID:" + p.getId() + " | Meja:" + p.getMeja().getNomor() + " | Total: Rp" + p.getTotal());
+                System.out.println(p.renderDetail());
                 found = true;
             }
         }
-
-        if (!found) {
+        if (!found)
             System.out.println("Tidak ada pesanan dengan status: " + status);
-        }
     }
 
     // =============================

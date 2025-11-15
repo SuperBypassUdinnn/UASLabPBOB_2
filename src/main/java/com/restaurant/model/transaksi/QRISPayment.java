@@ -1,9 +1,10 @@
 package main.java.com.restaurant.model.transaksi;
 
-public class QRISPayment extends Pembayaran {
+public class QRISPayment implements Pembayaran {
 
-    public QRISPayment() {
-        this.jenisPembayaran = "QRIS";
+    @Override
+    public String getJenis() {
+        return "QRIS";
     }
 
     @Override

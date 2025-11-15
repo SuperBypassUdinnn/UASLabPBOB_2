@@ -1,12 +1,16 @@
 package main.java.com.restaurant.model.transaksi;
 
-public class CashPayment extends Pembayaran {
+public class CashPayment implements Pembayaran {
 
     private double jumlahUang;
 
     public CashPayment(double jumlahUang) {
         this.jumlahUang = jumlahUang;
-        this.jenisPembayaran = "Cash";
+    }
+
+    @Override
+    public String getJenis() {
+        return "Cash";
     }
 
     @Override

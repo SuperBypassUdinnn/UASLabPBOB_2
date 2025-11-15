@@ -1,6 +1,8 @@
 package main.java.com.restaurant.service;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import main.java.com.restaurant.model.menu.*;
@@ -12,199 +14,243 @@ public class FileStorageService {
     private static final String MENU_FILE = "src/main/resources/data/menu.txt";
     private static final String PESANAN_FILE = "src/main/resources/data/pesanan.txt";
     private static final String TRANSAKSI_FILE = "src/main/resources/data/transaksi.txt";
+    private static final String ID_FILE = "src/main/resources/data/id.txt";
 
-    // =====================================================
-    // =============== LOAD MENU =========================
-    // =====================================================
+    // -----------------------
+    // LOAD MENU
+    // -----------------------
     public static List<MenuItem> loadMenu() {
         List<MenuItem> hasil = new ArrayList<>();
-
         File f = new File(MENU_FILE);
-        if (!f.exists()) {
-            System.out.println("[WARNING] File menu.txt tidak ditemukan! Membuat data dummy.");
-            return dummyMenu();
+        if (!f.exists() || f.length() == 0) {
+            // buat dummy & tulis file
+            hasil = dummyMenu();
+            try {
+                saveMenu(hasil);
+            } catch (IOException e) {
+                System.err.println("[FileStorageService] Gagal menulis menu dummy: " + e.getMessage());
+            }
+            return hasil;
         }
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
-
             while ((line = br.readLine()) != null) {
                 if (line.trim().isEmpty())
                     continue;
+                String[] arr = line.split(";");
+                if (arr.length < 5) {
+                    System.err.println("[FileStorageService] Baris menu invalid, dilewati: " + line);
+                    continue;
+                }
+                String jenis = arr[0].trim().toLowerCase();
+                String nama = arr[1].trim();
+                double harga;
+                try {
+                    harga = Double.parseDouble(arr[2].trim());
+                } catch (NumberFormatException ex) {
+                    System.err.println("[FileStorageService] Harga invalid: " + line);
+                    continue;
+                }
 
-                String[] data = line.split(";");
-                String jenis = data[0].trim();
-
-                if (jenis.equalsIgnoreCase("makanan")) {
-                    hasil.add(new Makanan(
-                            data[1], // nama
-                            Double.parseDouble(data[2]), // harga
-                            data[3], // kategori
-                            data[4] // tingkat pedas
-                    ));
-                } else if (jenis.equalsIgnoreCase("minuman")) {
-                    hasil.add(new Minuman(
-                            data[1],
-                            Double.parseDouble(data[2]),
-                            data[3], // size: Small/Medium/Large
-                            data[4] // panas/dingin
-                    ));
+                if ("makanan".equals(jenis)) {
+                    hasil.add(new Makanan(nama, harga, arr[3].trim(), arr[4].trim()));
+                } else if ("minuman".equals(jenis)) {
+                    hasil.add(new Minuman(nama, harga, arr[3].trim(), arr[4].trim()));
+                } else {
+                    System.err.println("[FileStorageService] Jenis menu tidak dikenal: " + line);
                 }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+        if (hasil.isEmpty()) {
+            hasil = dummyMenu();
+            try {
+                saveMenu(hasil);
+            } catch (IOException e) {
+                /* log */ }
+        }
         return hasil;
     }
 
-    // =====================================================
-    // =============== LOAD PESANAN =======================
-    // =====================================================
+    public static void saveMenu(List<MenuItem> menu) throws IOException {
+        File f = new File(MENU_FILE);
+        f.getParentFile().mkdirs();
+        // atomic write: tulis ke temp lalu pindahkan
+        Path temp = Files.createTempFile(f.getParentFile().toPath(), "menu", ".tmp");
+        try (PrintWriter pw = new PrintWriter(new FileWriter(temp.toFile()))) {
+            for (MenuItem m : menu) {
+                if (m instanceof Makanan) {
+                    Makanan mm = (Makanan) m;
+                    pw.printf("makanan;%s;%.0f;%s;%s%n", mm.getNama(), mm.getHarga(), mm.getKategori(),
+                            mm.getTingkatPedas());
+                } else if (m instanceof Minuman) {
+                    Minuman mn = (Minuman) m;
+                    pw.printf("minuman;%s;%.0f;%s;%s%n", mn.getNama(), mn.getHarga(), mn.getUkuran(), mn.getSuhu());
+                } else {
+                    pw.printf("lain;%s;%.0f;-%n", m.getNama(), m.getHarga());
+                }
+            }
+        }
+        Files.move(temp, f.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+    }
+
+    // -----------------------
+    // LOAD PESANAN
+    // format: id|meja|status|nama,jumlah,catatan#nama,jumlah,catatan
+    // -----------------------
     public static List<Pesanan> loadPesanan() {
         List<Pesanan> list = new ArrayList<>();
-
         File f = new File(PESANAN_FILE);
         if (!f.exists())
             return list;
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
-
             while ((line = br.readLine()) != null) {
                 if (line.trim().isEmpty())
                     continue;
+                try {
+                    String[] p = line.split("\\|", -1);
+                    int id = Integer.parseInt(p[0].trim());
+                    int meja = Integer.parseInt(p[1].trim());
+                    String status = p[2].trim();
 
-                // Format:
-                // id|meja|status|namaMenu,jumlah,catatan#namaMenu,jumlah,catatan
-                String[] p = line.split("\\|");
+                    Pesanan pes = new Pesanan(id, new Meja(meja));
+                    pes.setStatus(status);
 
-                int id = Integer.parseInt(p[0]);
-                int meja = Integer.parseInt(p[1]);
-                String status = p[2];
+                    if (p.length > 3 && !p[3].trim().isEmpty()) {
+                        String[] items = p[3].split("#");
+                        for (String item : items) {
+                            if (item.trim().isEmpty())
+                                continue;
+                            String[] parts = item.split(",", -1);
+                            // parts: nama, jumlah, catatan
+                            String nama = parts[0];
+                            int jumlah = Integer.parseInt(parts[1]);
+                            String catatan = parts.length > 2 ? parts[2] : "";
 
-                Pesanan pes = new Pesanan(id, new Meja(meja));
-                pes.setStatus(status);
-
-                if (p.length > 3 && !p[3].trim().isEmpty()) {
-                    String[] items = p[3].split("#");
-
-                    for (String item : items) {
-                        String[] i = item.split(",");
-                        String nama = i[0];
-                        int jumlah = Integer.parseInt(i[1]);
-                        String catatan = i[2];
-
-                        // cari menu berdasarkan nama
-                        MenuItem mi = findMenuByName(nama);
-                        if (mi != null) {
-                            pes.tambahItem(new DetailPesanan(mi, jumlah, catatan));
+                            MenuItem mi = findMenuByName(nama);
+                            if (mi != null) {
+                                pes.tambahItem(new DetailPesanan(mi, jumlah, catatan));
+                            } else {
+                                System.err.println(
+                                        "[FileStorageService] Menu '" + nama + "' tidak ditemukan saat load pesanan.");
+                            }
                         }
                     }
+                    list.add(pes);
+                } catch (Exception e) {
+                    System.err.println("[FileStorageService] Gagal parse baris pesanan (dilewati): " + line);
                 }
-
-                list.add(pes);
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return list;
     }
 
-    // =====================================================
-    // =============== SAVE PESANAN =======================
-    // =====================================================
+    // -----------------------
+    // SAVE PESANAN (atomic, overwrite keseluruhan daftar)
+    // -----------------------
     public static void savePesanan(List<Pesanan> list, int nextId) {
-        try (PrintWriter pw = new PrintWriter(new FileWriter(PESANAN_FILE))) {
-
-            for (Pesanan p : list) {
-                StringBuilder sb = new StringBuilder();
-
-                sb.append(p.getId()).append("|");
-                sb.append(p.getMeja().getNomor()).append("|");
-                sb.append(p.getStatus()).append("|");
-
-                for (DetailPesanan d : p.getItems()) {
-                    sb.append(d.getMenu().getNama()).append(",");
-                    sb.append(d.getJumlah()).append(",");
-                    sb.append(d.getCatatan());
-                    sb.append("#");
+        try {
+            File f = new File(PESANAN_FILE);
+            f.getParentFile().mkdirs();
+            Path temp = Files.createTempFile(f.getParentFile().toPath(), "pesanan", ".tmp");
+            try (PrintWriter pw = new PrintWriter(new FileWriter(temp.toFile()))) {
+                for (Pesanan p : list) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(p.getId()).append("|");
+                    sb.append(p.getMeja().getNomor()).append("|");
+                    sb.append(p.getStatus()).append("|");
+                    // items
+                    boolean first = true;
+                    for (DetailPesanan d : p.getItems()) {
+                        if (!first)
+                            sb.append("#");
+                        // escape commas/pipes if necessary (simple replace)
+                        String nama = d.getMenu().getNama().replace("|", " ").replace(",", " ");
+                        String cat = d.getCatatan() == null ? "" : d.getCatatan().replace("|", " ").replace(",", " ");
+                        sb.append(nama).append(",").append(d.getJumlah()).append(",").append(cat);
+                        first = false;
+                    }
+                    pw.println(sb.toString());
                 }
-
-                pw.println(sb.toString());
             }
+            Files.move(temp, f.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                    java.nio.file.StandardCopyOption.ATOMIC_MOVE);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // save last ID
-        try (PrintWriter idw = new PrintWriter(new FileWriter("src/main/resources/data/id.txt"))) {
-            idw.println(nextId);
+            // simpan nextId
+            File idf = new File(ID_FILE);
+            try (PrintWriter idw = new PrintWriter(new FileWriter(idf))) {
+                idw.println(nextId);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // =====================================================
-    // =============== LOAD LAST ID ========================
-    // =====================================================
+    // -----------------------
+    // LOAD LAST ID
+    // -----------------------
     public static int loadLastId() {
-        try (BufferedReader br = new BufferedReader(new FileReader("src/main/resources/data/id.txt"))) {
+        File f = new File(ID_FILE);
+        if (!f.exists())
+            return 1;
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String s = br.readLine();
-            if (s != null)
+            if (s != null && !s.trim().isEmpty())
                 return Integer.parseInt(s.trim());
         } catch (Exception e) {
         }
         return 1;
     }
 
-    // =====================================================
-    // SAVE TRANSAKSI
-    // =====================================================
+    // -----------------------
+    // SAVE TRANSAKSI (append, tiap transaksi satu baris)
+    // format: idPesanan|noMeja|total|jenis|waktu
+    // -----------------------
     public static void saveTransaksi(Transaksi t) {
-        try (PrintWriter pw = new PrintWriter(new FileWriter(TRANSAKSI_FILE, true))) {
-
-            pw.println(
-                    t.getPesanan().getId() + "|" +
-                            t.getPesanan().getMeja().getNomor() + "|" +
-                            t.getTotal() + "|" +
-                            t.getPembayaran().getJenis());
-
+        try {
+            File f = new File(TRANSAKSI_FILE);
+            f.getParentFile().mkdirs();
+            try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
+                pw.printf("%d|%d|%.0f|%s|%s%n",
+                        t.getPesanan().getId(),
+                        t.getPesanan().getMeja().getNomor(),
+                        t.getTotal(),
+                        t.getPembayaran().getJenis(),
+                        t.getWaktuFormatted());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // =====================================================
-    // HELPER: cari menu berdasarkan nama
-    // =====================================================
+    // -----------------------
+    // HELPER: cari menu by name
+    // -----------------------
     private static MenuItem findMenuByName(String nama) {
         List<MenuItem> menu = RestaurantSystem.getInstance().getMenuList();
-
         for (MenuItem m : menu) {
-            if (m.getNama().equalsIgnoreCase(nama)) {
+            if (m.getNama().equalsIgnoreCase(nama))
                 return m;
-            }
         }
-
         return null;
     }
 
-    // =====================================================
-    // DATA MENU DUMMY (jika file menu.txt tidak ada)
-    // =====================================================
+    // -----------------------
+    // Dummy menu
+    // -----------------------
     private static List<MenuItem> dummyMenu() {
         List<MenuItem> d = new ArrayList<>();
-
         d.add(new Makanan("Mie Aceh", 25000, "Main Course", "Sedang"));
-        d.add(new Makanan("Ayam Tangkap", 35000, "Main Course", "Tidak pedas"));
-        d.add(new Makanan("Sie Reuboh", 30000, "Traditional", "Pedas"));
-        d.add(new Minuman("Kopi Aceh", 15000, "Medium", "Panas"));
-
+        d.add(new Makanan("Mie Aceh Kepiting", 45000, "Main Course", "Pedas"));
+        d.add(new Minuman("Es Teh", 8000, "Medium", "Dingin"));
         return d;
     }
 }

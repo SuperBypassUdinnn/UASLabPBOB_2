@@ -14,7 +14,7 @@ public class MainPelayan {
         while (true) {
             System.out.println("\n===== MENU PELAYAN =====");
             System.out.println("1. Lihat Pesanan MENUNGGU");
-            System.out.println("2. Proses Pesanan → SEDANG DIMASAK");
+            System.out.println("2. Proses Pesanan -> SEDANG DIMASAK");
             System.out.println("0. Kembali");
             System.out.print("Pilih: ");
 
@@ -23,7 +23,7 @@ public class MainPelayan {
 
             switch (p) {
                 case 1:
-                    lihatMenunggu();
+                    rs.tampilPesananDenganStatus("MENUNGGU");
                     break;
                 case 2:
                     prosesPesanan();
@@ -36,22 +36,19 @@ public class MainPelayan {
         }
     }
 
-    private static void lihatMenunggu() {
-        System.out.println("\n=== PESANAN MENUNGGU ===");
-        rs.tampilPesananDenganStatus("MENUNGGU");
-    }
-
     private static void prosesPesanan() {
         System.out.println("\n=== PESANAN MENUNGGU ===");
-        rs.tampilPesananDenganStatus("MENUNGGGU");
+        rs.tampilPesananDenganStatus("MENUNGGU");
 
-        System.out.print("Masukkan ID pesanan: ");
+        System.out.print("Masukkan ID pesanan yang akan diproses: ");
         int id = sc.nextInt();
         sc.nextLine();
 
-        rs.updateStatusPesanan(id, "SEDANG DIMASAK");
-        rs.saveData();
-
-        System.out.println("Pesanan #" + id + " diteruskan ke koki.");
+        boolean ok = rs.updateStatusPesanan(id, "SEDANG DIMASAK");
+        if (ok) {
+            System.out.println("Pesanan #" + id + " status menjadi SEDANG DIMASAK.");
+        } else {
+            System.out.println("Pesanan dengan ID " + id + " tidak ditemukan.");
+        }
     }
 }

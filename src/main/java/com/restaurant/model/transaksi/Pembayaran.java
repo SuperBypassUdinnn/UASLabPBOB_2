@@ -1,13 +1,9 @@
 package main.java.com.restaurant.model.transaksi;
 
-public abstract class Pembayaran {
+public interface Pembayaran {
 
-    protected String jenisPembayaran;
+    String getJenis();
 
-    public String getJenis() {
-        return jenisPembayaran;
-    }
-
-    // proses pembayaran → return true jika berhasil
-    public abstract boolean prosesPembayaran(double total);
+    // proses pembayaran
+    boolean prosesPembayaran(double total);
 }

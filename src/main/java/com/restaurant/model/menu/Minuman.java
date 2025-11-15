@@ -10,6 +10,14 @@ public class Minuman extends MenuItem {
         this.suhu = suhu;
     }
 
+    public String getUkuran() {
+        return ukuran;
+    }
+
+    public String getSuhu() {
+        return suhu;
+    }
+
     @Override
     public String getInfo() {
         return nama + " (" + ukuran + ", " + suhu + ") - Rp" + harga;

@@ -18,4 +18,9 @@ public abstract class MenuItem {
     }
 
     public abstract String getInfo();
+
+    @Override
+    public String toString() {
+        return getInfo();
+    }
 }

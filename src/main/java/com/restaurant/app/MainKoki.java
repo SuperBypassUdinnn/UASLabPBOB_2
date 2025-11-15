@@ -14,7 +14,7 @@ public class MainKoki {
         while (true) {
             System.out.println("\n===== MENU KOKI =====");
             System.out.println("1. Lihat Pesanan SEDANG DIMASAK");
-            System.out.println("2. Tandai Pesanan Selesai");
+            System.out.println("2. Tandai Pesanan SELESAI DIMASAK");
             System.out.println("0. Kembali");
             System.out.print("Pilih: ");
 
@@ -23,7 +23,7 @@ public class MainKoki {
 
             switch (p) {
                 case 1:
-                    lihatDimasak();
+                    rs.tampilPesananDenganStatus("SEDANG DIMASAK");
                     break;
                 case 2:
                     selesaiDimasak();
@@ -36,22 +36,18 @@ public class MainKoki {
         }
     }
 
-    private static void lihatDimasak() {
-        System.out.println("\n=== PESANAN SEDANG DIMASAK ===");
-        rs.tampilPesananDenganStatus("SEDANG DIMASAK");
-    }
-
     private static void selesaiDimasak() {
         System.out.println("\n=== PESANAN SEDANG DIMASAK ===");
         rs.tampilPesananDenganStatus("SEDANG DIMASAK");
 
-        System.out.print("Masukkan ID pesanan: ");
+        System.out.print("Masukkan ID pesanan yang selesai dimasak: ");
         int id = sc.nextInt();
         sc.nextLine();
 
-        rs.updateStatusPesanan(id, "SELESAI DIMASAK");
-        rs.saveData();
-
-        System.out.println("Pesanan #" + id + " selesai dimasak dan siap diantar.");
+        boolean ok = rs.updateStatusPesanan(id, "SELESAI DIMASAK");
+        if (ok)
+            System.out.println("Pesanan #" + id + " sudah SELESAI DIMASAK.");
+        else
+            System.out.println("Pesanan ID tidak ditemukan.");
     }
 }

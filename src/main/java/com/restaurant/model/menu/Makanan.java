@@ -10,6 +10,14 @@ public class Makanan extends MenuItem {
         this.tingkatPedas = tingkatPedas;
     }
 
+    public String getKategori() {
+        return kategori;
+    }
+
+    public String getTingkatPedas() {
+        return tingkatPedas;
+    }
+
     @Override
     public String getInfo() {
         return nama + " (" + kategori + ", pedas: " + tingkatPedas + ") - Rp" + harga;
