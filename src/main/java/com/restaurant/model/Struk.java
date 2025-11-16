@@ -1,8 +1,8 @@
-package main.java.com.restaurant.model;
+package com.restaurant.model;
 
-import main.java.com.restaurant.model.pesanan.DetailPesanan;
-import main.java.com.restaurant.model.pesanan.Pesanan;
-import main.java.com.restaurant.model.transaksi.Transaksi;
+import com.restaurant.model.pesanan.DetailPesanan;
+import com.restaurant.model.pesanan.Pesanan;
+import com.restaurant.model.transaksi.Transaksi;
 
 public class Struk {
 

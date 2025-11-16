@@ -1,5 +1,5 @@
-package main.java.com.restaurant.service;
+package com.restaurant.service;
 
 public class AuthService {
-    
+
 }

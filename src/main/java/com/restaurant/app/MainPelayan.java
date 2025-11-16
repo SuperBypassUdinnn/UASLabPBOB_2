@@ -1,9 +1,9 @@
-package main.java.com.restaurant.app;
+package com.restaurant.app;
 
 import java.util.Scanner;
 
-import main.java.com.restaurant.service.RestaurantSystem;
-import main.java.com.restaurant.utils.InputUtil;
+import com.restaurant.service.RestaurantSystem;
+import com.restaurant.utils.InputUtil;
 
 public class MainPelayan {
 

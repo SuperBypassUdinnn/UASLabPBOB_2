@@ -1,4 +1,4 @@
-package main.java.com.restaurant.model.menu;
+package com.restaurant.model.menu;
 
 public class Makanan extends MenuItem {
     private String kategori;
