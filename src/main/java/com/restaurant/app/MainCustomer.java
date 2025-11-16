@@ -1,14 +1,14 @@
-package main.java.com.restaurant.app;
+package com.restaurant.app;
 
 import java.util.List;
 import java.util.Scanner;
 
-import main.java.com.restaurant.model.pesanan.*;
-import main.java.com.restaurant.model.menu.*;
-import main.java.com.restaurant.model.transaksi.*;
-import main.java.com.restaurant.model.Struk;
-import main.java.com.restaurant.service.RestaurantSystem;
-import main.java.com.restaurant.utils.InputUtil;
+import com.restaurant.model.pesanan.*;
+import com.restaurant.model.menu.*;
+import com.restaurant.model.transaksi.*;
+import com.restaurant.model.Struk;
+import com.restaurant.service.RestaurantSystem;
+import com.restaurant.utils.InputUtil;
 
 public class MainCustomer {
 

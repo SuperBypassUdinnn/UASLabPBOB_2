@@ -1,4 +1,4 @@
-package main.java.com.restaurant.model.transaksi;
+package com.restaurant.model.transaksi;
 
 public class CashPayment implements Pembayaran {
 

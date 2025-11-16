@@ -1,4 +1,4 @@
-package main.java.com.restaurant.model.menu;
+package com.restaurant.model.menu;
 
 public abstract class MenuItem {
     protected String nama;

@@ -1,4 +1,4 @@
-package main.java.com.restaurant.app;
+package com.restaurant.app;
 
 public class RestaurantDriver {
 

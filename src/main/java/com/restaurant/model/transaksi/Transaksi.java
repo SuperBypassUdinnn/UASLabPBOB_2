@@ -1,9 +1,9 @@
-package main.java.com.restaurant.model.transaksi;
+package com.restaurant.model.transaksi;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import main.java.com.restaurant.model.pesanan.Pesanan;
+import com.restaurant.model.pesanan.Pesanan;
 
 public class Transaksi {
 

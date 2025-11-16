@@ -1,6 +1,6 @@
-package main.java.com.restaurant.model.pesanan;
+package com.restaurant.model.pesanan;
 
-import main.java.com.restaurant.model.menu.MenuItem;
+import com.restaurant.model.menu.MenuItem;
 
 public class DetailPesanan {
 

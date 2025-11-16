@@ -1,4 +1,4 @@
-package main.java.com.restaurant.model.menu;
+package com.restaurant.model.menu;
 
 public class Minuman extends MenuItem {
     private String ukuran;

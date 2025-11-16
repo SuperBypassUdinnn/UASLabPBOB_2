@@ -1,4 +1,4 @@
-package main.java.com.restaurant.model.pesanan;
+package com.restaurant.model.pesanan;
 
 public class Meja {
     private int nomor;

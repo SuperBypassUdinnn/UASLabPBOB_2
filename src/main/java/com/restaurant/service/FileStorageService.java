@@ -1,13 +1,13 @@
-package main.java.com.restaurant.service;
+package com.restaurant.service;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import main.java.com.restaurant.model.menu.*;
-import main.java.com.restaurant.model.pesanan.*;
-import main.java.com.restaurant.model.transaksi.*;
+import com.restaurant.model.menu.*;
+import com.restaurant.model.pesanan.*;
+import com.restaurant.model.transaksi.*;
 
 public class FileStorageService {
 
