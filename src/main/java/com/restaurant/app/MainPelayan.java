@@ -15,7 +15,7 @@ public class MainPelayan {
             System.out.println("\n===== MENU PELAYAN =====");
             System.out.println("1. Lihat Pesanan MENUNGGU");
             System.out.println("2. Proses Pesanan -> SEDANG DIMASAK");
-            System.out.println("0. Kembali");
+            System.out.println("0. Logout");
             System.out.print("Pilih: ");
 
             int p = sc.nextInt();
