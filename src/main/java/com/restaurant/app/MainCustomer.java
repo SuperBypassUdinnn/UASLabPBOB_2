@@ -23,7 +23,7 @@ public class MainCustomer {
             System.out.println("3. Buat Pesanan");
             System.out.println("4. Lihat Status Pesanan");
             System.out.println("5. Bayar Pesanan");
-            System.out.println("0. Kembali");
+            System.out.println("0. Logout");
             System.out.print("Pilih: ");
 
             int pilih = sc.nextInt();

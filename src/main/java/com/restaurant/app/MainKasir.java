@@ -18,7 +18,7 @@ public class MainKasir {
             System.out.println("\n===== MENU KASIR =====");
             System.out.println("1. Lihat Pesanan Siap Bayar (SELESAI DIMASAK)");
             System.out.println("2. Proses Pembayaran");
-            System.out.println("0. Kembali");
+            System.out.println("0. Logout");
             System.out.print("Pilih: ");
 
             int p = sc.nextInt();

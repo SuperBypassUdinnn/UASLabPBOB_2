@@ -15,7 +15,7 @@ public class MainKoki {
             System.out.println("\n===== MENU KOKI =====");
             System.out.println("1. Lihat Pesanan SEDANG DIMASAK");
             System.out.println("2. Tandai Pesanan SELESAI DIMASAK");
-            System.out.println("0. Kembali");
+            System.out.println("0. Logout");
             System.out.print("Pilih: ");
 
             int p = sc.nextInt();
