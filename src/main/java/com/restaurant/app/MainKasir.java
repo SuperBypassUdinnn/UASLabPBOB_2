@@ -1,5 +1,6 @@
 package com.restaurant.app;
 
+import java.util.List;
 import java.util.Scanner;
 
 import com.restaurant.model.pesanan.Pesanan;
@@ -12,12 +13,23 @@ public class MainKasir {
 
     private static Scanner sc = InputUtil.sc;
     private static RestaurantSystem rs = RestaurantSystem.getInstance();
+    private static String currentUsername;
+    private static String currentRole;
 
-    public static void run() {
+    public static void run(String username, String role) {
+        currentUsername = username;
+        currentRole = role;
+        
         while (true) {
+            // Tampilkan notifikasi terbaru
+            tampilNotifikasi();
+            
             System.out.println("\n===== MENU KASIR =====");
+            System.out.println("Selamat datang, " + currentUsername + "!");
             System.out.println("1. Lihat Pesanan Siap Bayar (SELESAI DIMASAK)");
             System.out.println("2. Proses Pembayaran");
+            System.out.println("3. Lihat Notifikasi");
+            System.out.println("4. Lihat Detail Pesanan");
             System.out.println("0. Logout");
             System.out.print("Pilih: ");
 
@@ -31,10 +43,26 @@ public class MainKasir {
                 case 2:
                     prosesPembayaran();
                     break;
+                case 3:
+                    tampilNotifikasi();
+                    break;
+                case 4:
+                    lihatDetailPesanan();
+                    break;
                 case 0:
                     return;
                 default:
                     System.out.println("Pilihan tidak valid!");
+            }
+        }
+    }
+
+    private static void tampilNotifikasi() {
+        List<String> notifications = rs.getNotificationsForRole("kasir");
+        if (!notifications.isEmpty()) {
+            System.out.println("\n📢 NOTIFIKASI TERBARU:");
+            for (String notif : notifications) {
+                System.out.println("  " + notif);
             }
         }
     }
@@ -54,11 +82,12 @@ public class MainKasir {
 
         Pesanan p = rs.getPesananById(id);
         if (p == null) {
-            System.out.println("ID tidak ditemukan.");
+            System.out.println("❌ ID tidak ditemukan.");
             return;
         }
 
-        System.out.println("Total bayar: Rp" + p.getTotal());
+        System.out.println("\n" + p.getInfoLengkap());
+        System.out.println("\nTotal bayar: Rp" + p.getTotal());
         System.out.println("Metode:");
         System.out.println("1. Cash");
         System.out.println("2. Card");
@@ -92,11 +121,25 @@ public class MainKasir {
 
         if (t.konfirmasi()) {
             Struk.cetak(t);
-            rs.updateStatusPesanan(id, "SELESAI");
+            rs.updateStatusPesanan(id, "SELESAI", currentUsername, currentRole);
             rs.saveData();
-            System.out.println("Pembayaran berhasil!");
+            System.out.println("✅ Pembayaran berhasil!");
+            System.out.println("📤 Notifikasi telah dikirim ke Pelayan!");
         } else {
-            System.out.println("Pembayaran gagal.");
+            System.out.println("❌ Pembayaran gagal.");
+        }
+    }
+    
+    private static void lihatDetailPesanan() {
+        System.out.print("Masukkan ID pesanan: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+        
+        Pesanan pesanan = rs.getPesananById(id);
+        if (pesanan != null) {
+            System.out.println("\n" + pesanan.getInfoLengkap());
+        } else {
+            System.out.println("Pesanan tidak ditemukan.");
         }
     }
 }

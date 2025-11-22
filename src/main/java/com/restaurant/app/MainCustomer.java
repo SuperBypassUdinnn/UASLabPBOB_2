@@ -14,15 +14,25 @@ public class MainCustomer {
 
     private static RestaurantSystem rs = RestaurantSystem.getInstance();
     private static Scanner sc = InputUtil.sc;
+    private static String currentUsername;
+    private static String currentRole;
 
-    public static void run() {
+    public static void run(String username, String role) {
+        currentUsername = username;
+        currentRole = role;
+        
         while (true) {
+            // Tampilkan notifikasi terbaru
+            tampilNotifikasi();
+            
             System.out.println("\n===== MENU CUSTOMER =====");
+            System.out.println("Selamat datang, " + currentUsername + "!");
             System.out.println("1. Pilih Meja");
             System.out.println("2. Lihat Menu");
             System.out.println("3. Buat Pesanan");
             System.out.println("4. Lihat Status Pesanan");
             System.out.println("5. Bayar Pesanan");
+            System.out.println("6. Lihat Notifikasi");
             System.out.println("0. Logout");
             System.out.print("Pilih: ");
 
@@ -45,10 +55,23 @@ public class MainCustomer {
                 case 5:
                     bayarPesanan();
                     break;
+                case 6:
+                    tampilNotifikasi();
+                    break;
                 case 0:
                     return;
                 default:
                     System.out.println("Pilihan tidak valid!");
+            }
+        }
+    }
+    
+    private static void tampilNotifikasi() {
+        List<String> notifications = rs.getNotificationsForRole("customer");
+        if (!notifications.isEmpty()) {
+            System.out.println("\n📢 NOTIFIKASI TERBARU:");
+            for (String notif : notifications) {
+                System.out.println("  " + notif);
             }
         }
     }
@@ -150,7 +173,8 @@ public class MainCustomer {
 
         System.out.println("\n=== STATUS PESANAN ===");
         for (Pesanan p : pes) {
-            System.out.println("ID: " + p.getId() + " | Status: " + p.getStatus());
+            System.out.println(p.getInfoLengkap());
+            System.out.println(); // spacing
         }
     }
 
@@ -209,10 +233,11 @@ public class MainCustomer {
 
         if (t.konfirmasi()) {
             Struk.cetak(t);
-            rs.updateStatusPesanan(siap.getId(), "SELESAI");
-            System.out.println("Pembayaran berhasil!");
+            rs.updateStatusPesanan(siap.getId(), "SELESAI", currentUsername, currentRole);
+            System.out.println("✅ Pembayaran berhasil!");
+            System.out.println("📤 Notifikasi telah dikirim ke Pelayan!");
         } else {
-            System.out.println("Pembayaran gagal.");
+            System.out.println("❌ Pembayaran gagal.");
         }
 
         rs.saveData();
