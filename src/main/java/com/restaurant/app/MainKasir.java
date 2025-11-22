@@ -1,5 +1,6 @@
 package com.restaurant.app;
 
+import java.util.List;
 import java.util.Scanner;
 
 import com.restaurant.model.pesanan.Pesanan;
@@ -15,6 +16,9 @@ public class MainKasir {
 
     public static void run() {
         while (true) {
+            // Tampilkan notifikasi real-time sebelum menu
+            tampilRealTimeNotifications();
+
             System.out.println("\n===== MENU KASIR =====");
             System.out.println("1. Lihat Pesanan Siap Bayar (DISAJIKAN)");
             System.out.println("2. Proses Pembayaran");
@@ -112,6 +116,27 @@ public class MainKasir {
             System.out.println("📤 Notifikasi telah dikirim ke Pelayan dan Customer!");
         } else {
             System.out.println("Pembayaran gagal.");
+        }
+    }
+
+    /**
+     * Tampilkan notifikasi real-time untuk Kasir
+     */
+    private static void tampilRealTimeNotifications() {
+        rs.refreshPesananFromFile(); // Reload dari file untuk update terbaru
+
+        List<String> notifications = rs.getRealTimeNotifications("kasir");
+        if (!notifications.isEmpty()) {
+            System.out.println("\n📢 NOTIFIKASI REAL-TIME:");
+            for (String notif : notifications) {
+                System.out.println("  " + notif);
+            }
+        }
+
+        // Check pesanan siap bayar
+        List<Pesanan> siapBayar = rs.getPesananByStatusForRole("kasir", "DISAJIKAN");
+        if (!siapBayar.isEmpty()) {
+            System.out.println("\n💰 " + siapBayar.size() + " pesanan siap untuk pembayaran!");
         }
     }
 }

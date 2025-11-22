@@ -91,11 +91,20 @@ public class RestaurantSystem {
     // PESANAN
     // =============================
     public Pesanan buatPesananKosong(int noMeja) {
+        refreshPesananFromFile(); // Reload untuk mendapatkan ID terbaru
         Pesanan p = new Pesanan(idCounter++, new Meja(noMeja));
         p.setStatus("MENUNGGU");
         daftarPesanan.add(p);
         saveData();
         return p;
+    }
+
+    /**
+     * Mendapatkan pesanan dengan status tertentu untuk role (real-time)
+     */
+    public List<Pesanan> getPesananByStatusForRole(String role, String status) {
+        refreshPesananFromFile();
+        return RealTimeUpdateService.getInstance().getPesananByStatusForRole(role, status);
     }
 
     public List<Pesanan> getPesananByMeja(int meja) {
@@ -122,6 +131,9 @@ public class RestaurantSystem {
     // UPDATE STATUS PESANAN
     // =============================
     public boolean updateStatusPesanan(int id, String statusBaru) {
+        // Reload dari file untuk mendapatkan data terbaru
+        refreshPesananFromFile();
+
         Pesanan p = getPesananById(id);
         if (p == null)
             return false;
@@ -129,6 +141,21 @@ public class RestaurantSystem {
         p.setStatus(statusBaru);
         saveData();
         return true;
+    }
+
+    /**
+     * Refresh pesanan dari file (untuk real-time update)
+     */
+    public void refreshPesananFromFile() {
+        daftarPesanan = FileStorageService.loadPesanan();
+    }
+
+    /**
+     * Mendapatkan notifikasi real-time untuk role tertentu
+     */
+    public List<String> getRealTimeNotifications(String role) {
+        refreshPesananFromFile();
+        return RealTimeUpdateService.getInstance().getNotificationsForRole(role, daftarPesanan);
     }
 
     // =============================

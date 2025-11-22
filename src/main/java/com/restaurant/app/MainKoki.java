@@ -1,7 +1,9 @@
 package com.restaurant.app;
 
+import java.util.List;
 import java.util.Scanner;
 
+import com.restaurant.model.pesanan.Pesanan;
 import com.restaurant.service.RestaurantSystem;
 import com.restaurant.utils.InputUtil;
 
@@ -12,6 +14,9 @@ public class MainKoki {
 
     public static void run() {
         while (true) {
+            // Tampilkan notifikasi real-time sebelum menu
+            tampilRealTimeNotifications();
+
             System.out.println("\n===== MENU KOKI =====");
             System.out.println("1. Lihat Pesanan DIPROSES (Masuk Dapur)");
             System.out.println("2. Mulai Memasak -> SEDANG DIMASAK");
@@ -115,6 +120,33 @@ public class MainKoki {
             System.out.println(pesanan.renderDetail());
         } else {
             System.out.println("Pesanan tidak ditemukan.");
+        }
+    }
+
+    /**
+     * Tampilkan notifikasi real-time untuk Koki
+     */
+    private static void tampilRealTimeNotifications() {
+        rs.refreshPesananFromFile(); // Reload dari file untuk update terbaru
+
+        List<String> notifications = rs.getRealTimeNotifications("koki");
+        if (!notifications.isEmpty()) {
+            System.out.println("\n📢 NOTIFIKASI REAL-TIME:");
+            for (String notif : notifications) {
+                System.out.println("  " + notif);
+            }
+        }
+
+        // Check pesanan baru masuk dapur
+        List<Pesanan> pesananBaru = rs.getPesananByStatusForRole("koki", "DIPROSES");
+        if (!pesananBaru.isEmpty()) {
+            System.out.println("\n🆕 " + pesananBaru.size() + " pesanan baru masuk dapur!");
+        }
+
+        // Check pesanan sedang dimasak
+        List<Pesanan> sedangDimasak = rs.getPesananByStatusForRole("koki", "SEDANG DIMASAK");
+        if (!sedangDimasak.isEmpty()) {
+            System.out.println("👨‍🍳 " + sedangDimasak.size() + " pesanan sedang dimasak");
         }
     }
 }
