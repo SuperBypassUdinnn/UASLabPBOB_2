@@ -190,13 +190,22 @@ public class MainCustomer {
 
         List<Pesanan> pes = rs.getPesananByMeja(mejaDipilih);
 
+        // Customer hanya bisa bayar setelah pesanan sudah disajikan
         Pesanan siap = pes.stream()
-                .filter(p -> p.getStatus().equals("SELESAI DIMASAK"))
+                .filter(p -> p.getStatus().equals("DISAJIKAN"))
                 .findFirst()
                 .orElse(null);
 
         if (siap == null) {
-            System.out.println("Belum ada pesanan yang selesai dimasak.");
+            System.out.println("Belum ada pesanan yang sudah disajikan.");
+            System.out.println("Silakan tunggu pelayan menyajikan pesanan Anda terlebih dahulu.");
+            
+            // Tampilkan status pesanan yang ada
+            for (Pesanan p : pes) {
+                if (!p.getStatus().equals("LUNAS")) {
+                    System.out.println("  - Pesanan #" + p.getId() + " status: " + p.getStatus());
+                }
+            }
             return;
         }
 
@@ -233,8 +242,8 @@ public class MainCustomer {
 
         if (t.konfirmasi()) {
             Struk.cetak(t);
-            rs.updateStatusPesanan(siap.getId(), "SELESAI", currentUsername, currentRole);
-            System.out.println("✅ Pembayaran berhasil!");
+            rs.updateStatusPesanan(siap.getId(), "LUNAS", currentUsername, currentRole);
+            System.out.println("✅ Pembayaran berhasil! Pesanan #" + siap.getId() + " status menjadi LUNAS.");
             System.out.println("📤 Notifikasi telah dikirim ke Pelayan!");
         } else {
             System.out.println("❌ Pembayaran gagal.");

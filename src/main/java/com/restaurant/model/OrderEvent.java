@@ -79,37 +79,46 @@ public class OrderEvent {
     
     /**
      * Mendapatkan notifikasi untuk role tertentu
+     * Alur dunia nyata: MENUNGGU -> DIPROSES -> SEDANG DIMASAK -> SIAP DISAJIKAN -> DISAJIKAN -> LUNAS
      */
     public String getNotificationForRole(String targetRole) {
         String waktu = timestamp.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         
         switch (targetRole.toLowerCase()) {
             case "koki":
-                if (statusBaru.equals("SEDANG DIMASAK")) {
-                    return "🆕 [新订单] Pesanan #" + pesananId + " baru masuk dapur [" + waktu + "]";
+                // Koki mendapat notifikasi ketika pelayan mengirim pesanan ke dapur (DIPROSES)
+                if (statusBaru.equals("DIPROSES")) {
+                    return "🆕 [新订单] Pesanan #" + pesananId + " masuk ke dapur, siap dimasak [" + waktu + "]";
                 }
                 break;
             case "kasir":
-                if (statusBaru.equals("SELESAI DIMASAK")) {
-                    return "💰 [Siap Bayar] Pesanan #" + pesananId + " siap untuk pembayaran [" + waktu + "]";
+                // Kasir mendapat notifikasi ketika pesanan sudah disajikan (bisa dibayar)
+                if (statusBaru.equals("DISAJIKAN")) {
+                    return "💰 [Siap Bayar] Pesanan #" + pesananId + " sudah disajikan, siap untuk pembayaran [" + waktu + "]";
                 }
                 break;
             case "pelayan":
+                // Pelayan mendapat notifikasi untuk pesanan baru, makanan siap disajikan, dan pembayaran selesai
                 if (statusBaru.equals("MENUNGGU") && statusLama == null) {
-                    return "🔔 [Pesanan Baru] Pesanan #" + pesananId + " menunggu diproses [" + waktu + "]";
-                } else if (statusBaru.equals("SELESAI DIMASAK")) {
-                    return "🍽️ [Siap Disajikan] Pesanan #" + pesananId + " selesai dimasak [" + waktu + "]";
-                } else if (statusBaru.equals("SELESAI")) {
-                    return "✅ Pesanan #" + pesananId + " telah dibayar dan meja kosong [" + waktu + "]";
+                    return "🔔 [Pesanan Baru] Pesanan #" + pesananId + " menunggu diterima [" + waktu + "]";
+                } else if (statusBaru.equals("SIAP DISAJIKAN")) {
+                    return "🍽️ [Siap Disajikan] Pesanan #" + pesananId + " selesai dimasak, siap diantar ke meja [" + waktu + "]";
+                } else if (statusBaru.equals("LUNAS")) {
+                    return "✅ Pesanan #" + pesananId + " telah dibayar, meja kosong [" + waktu + "]";
                 }
                 break;
             case "customer":
-                if (statusBaru.equals("SEDANG DIMASAK")) {
+                // Customer mendapat update status dari awal sampai akhir
+                if (statusBaru.equals("DIPROSES")) {
+                    return "✅ Pesanan #" + pesananId + " diterima dan sedang dipersiapkan [" + waktu + "]";
+                } else if (statusBaru.equals("SEDANG DIMASAK")) {
                     return "👨‍🍳 Pesanan #" + pesananId + " sedang dimasak [" + waktu + "]";
-                } else if (statusBaru.equals("SELESAI DIMASAK")) {
-                    return "✅ Pesanan #" + pesananId + " selesai dimasak, siap disajikan [" + waktu + "]";
-                } else if (statusBaru.equals("SELESAI")) {
-                    return "✅ Pesanan #" + pesananId + " telah selesai [" + waktu + "]";
+                } else if (statusBaru.equals("SIAP DISAJIKAN")) {
+                    return "🍽️ Pesanan #" + pesananId + " selesai dimasak, menunggu disajikan [" + waktu + "]";
+                } else if (statusBaru.equals("DISAJIKAN")) {
+                    return "✅ Pesanan #" + pesananId + " sudah disajikan, selamat menikmati! [" + waktu + "]";
+                } else if (statusBaru.equals("LUNAS")) {
+                    return "✅ Pesanan #" + pesananId + " telah lunas dibayar. Terima kasih! [" + waktu + "]";
                 }
                 break;
         }

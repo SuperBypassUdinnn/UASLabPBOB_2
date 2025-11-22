@@ -75,7 +75,7 @@ public class RestaurantSystem {
 
             for (Pesanan p : daftarPesanan) {
                 if (p.getMeja().getNomor() == m.getNomor() &&
-                        !p.getStatus().equals("SELESAI")) {
+                        !p.getStatus().equals("LUNAS")) {
                     dipakai = true;
                     break;
                 }

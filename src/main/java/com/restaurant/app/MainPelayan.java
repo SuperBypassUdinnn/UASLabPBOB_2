@@ -23,10 +23,12 @@ public class MainPelayan {
             
             System.out.println("\n===== MENU PELAYAN =====");
             System.out.println("Selamat datang, " + currentUsername + "!");
-            System.out.println("1. Lihat Pesanan MENUNGGU");
-            System.out.println("2. Proses Pesanan -> SEDANG DIMASAK");
-            System.out.println("3. Lihat Notifikasi");
-            System.out.println("4. Lihat Detail Pesanan");
+            System.out.println("1. Lihat Pesanan MENUNGGU (Pesanan Baru)");
+            System.out.println("2. Terima Pesanan -> DIPROSES (Kirim ke Dapur)");
+            System.out.println("3. Lihat Pesanan SIAP DISAJIKAN");
+            System.out.println("4. Sajikan Pesanan ke Meja -> DISAJIKAN");
+            System.out.println("5. Lihat Notifikasi");
+            System.out.println("6. Lihat Detail Pesanan");
             System.out.println("0. Logout");
             System.out.print("Pilih: ");
 
@@ -38,12 +40,18 @@ public class MainPelayan {
                     lihatPesananMenunggu();
                     break;
                 case 2:
-                    prosesPesanan();
+                    terimaPesanan();
                     break;
                 case 3:
-                    tampilNotifikasi();
+                    lihatPesananSiapDisajikan();
                     break;
                 case 4:
+                    sajikanPesanan();
+                    break;
+                case 5:
+                    tampilNotifikasi();
+                    break;
+                case 6:
                     lihatDetailPesanan();
                     break;
                 case 0:
@@ -65,24 +73,57 @@ public class MainPelayan {
     }
 
     private static void lihatPesananMenunggu() {
-        System.out.println("\n=== PESANAN MENUNGGU ===");
+        System.out.println("\n=== PESANAN MENUNGGU (Pesanan Baru dari Customer) ===");
         rs.tampilPesananDenganStatus("MENUNGGU");
     }
 
-    private static void prosesPesanan() {
+    /**
+     * Pelayan menerima pesanan dari customer dan mengirim ke dapur
+     * Status: MENUNGGU -> DIPROSES
+     */
+    private static void terimaPesanan() {
         System.out.println("\n=== PESANAN MENUNGGU ===");
         rs.tampilPesananDenganStatus("MENUNGGU");
 
-        System.out.print("Masukkan ID pesanan yang akan diproses: ");
+        System.out.print("Masukkan ID pesanan yang akan diterima dan dikirim ke dapur: ");
         int id = sc.nextInt();
         sc.nextLine();
 
-        boolean ok = rs.updateStatusPesanan(id, "SEDANG DIMASAK", currentUsername, currentRole);
+        boolean ok = rs.updateStatusPesanan(id, "DIPROSES", currentUsername, currentRole);
         if (ok) {
-            System.out.println("✅ Pesanan #" + id + " status menjadi SEDANG DIMASAK.");
+            System.out.println("✅ Pesanan #" + id + " diterima dan dikirim ke dapur (Status: DIPROSES).");
             System.out.println("📤 Notifikasi telah dikirim ke Koki!");
         } else {
-            System.out.println("❌ Pesanan dengan ID " + id + " tidak ditemukan.");
+            System.out.println("❌ Pesanan dengan ID " + id + " tidak ditemukan atau status tidak valid.");
+        }
+    }
+
+    /**
+     * Pelayan melihat pesanan yang sudah siap disajikan (selesai dimasak)
+     */
+    private static void lihatPesananSiapDisajikan() {
+        System.out.println("\n=== PESANAN SIAP DISAJIKAN (Selesai Dimasak) ===");
+        rs.tampilPesananDenganStatus("SIAP DISAJIKAN");
+    }
+
+    /**
+     * Pelayan menyajikan pesanan ke meja customer
+     * Status: SIAP DISAJIKAN -> DISAJIKAN
+     */
+    private static void sajikanPesanan() {
+        System.out.println("\n=== PESANAN SIAP DISAJIKAN ===");
+        rs.tampilPesananDenganStatus("SIAP DISAJIKAN");
+
+        System.out.print("Masukkan ID pesanan yang akan disajikan ke meja: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+
+        boolean ok = rs.updateStatusPesanan(id, "DISAJIKAN", currentUsername, currentRole);
+        if (ok) {
+            System.out.println("✅ Pesanan #" + id + " sudah disajikan ke meja (Status: DISAJIKAN).");
+            System.out.println("📤 Notifikasi telah dikirim ke Customer dan Kasir!");
+        } else {
+            System.out.println("❌ Pesanan dengan ID " + id + " tidak ditemukan atau status tidak valid.");
         }
     }
     

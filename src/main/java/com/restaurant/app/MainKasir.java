@@ -26,7 +26,7 @@ public class MainKasir {
             
             System.out.println("\n===== MENU KASIR =====");
             System.out.println("Selamat datang, " + currentUsername + "!");
-            System.out.println("1. Lihat Pesanan Siap Bayar (SELESAI DIMASAK)");
+            System.out.println("1. Lihat Pesanan Siap Bayar (DISAJIKAN)");
             System.out.println("2. Proses Pembayaran");
             System.out.println("3. Lihat Notifikasi");
             System.out.println("4. Lihat Detail Pesanan");
@@ -68,13 +68,18 @@ public class MainKasir {
     }
 
     private static void lihatSiapBayar() {
-        System.out.println("\n=== PESANAN SELESAI DIMASAK ===");
-        rs.tampilPesananDenganStatus("SELESAI DIMASAK");
+        System.out.println("\n=== PESANAN DISAJIKAN (Siap untuk Pembayaran) ===");
+        rs.tampilPesananDenganStatus("DISAJIKAN");
     }
 
+    /**
+     * Kasir memproses pembayaran pesanan yang sudah disajikan
+     * Status: DISAJIKAN -> LUNAS
+     */
     private static void prosesPembayaran() {
         System.out.println("\n=== PILIH PESANAN UNTUK DIBAYAR ===");
-        rs.tampilPesananDenganStatus("SELESAI DIMASAK");
+        System.out.println("(Hanya pesanan yang sudah DISAJIKAN bisa dibayar)");
+        rs.tampilPesananDenganStatus("DISAJIKAN");
 
         System.out.print("Masukkan ID pesanan: ");
         int id = sc.nextInt();
@@ -85,12 +90,19 @@ public class MainKasir {
             System.out.println("❌ ID tidak ditemukan.");
             return;
         }
+        
+        // Validasi: hanya pesanan yang sudah disajikan yang bisa dibayar
+        if (!p.getStatus().equals("DISAJIKAN")) {
+            System.out.println("❌ Pesanan belum disajikan. Status saat ini: " + p.getStatus());
+            System.out.println("   Hanya pesanan dengan status DISAJIKAN yang bisa dibayar.");
+            return;
+        }
 
         System.out.println("\n" + p.getInfoLengkap());
         System.out.println("\nTotal bayar: Rp" + p.getTotal());
-        System.out.println("Metode:");
-        System.out.println("1. Cash");
-        System.out.println("2. Card");
+        System.out.println("Metode Pembayaran:");
+        System.out.println("1. Cash (Tunai)");
+        System.out.println("2. Card (Kartu)");
         System.out.println("3. QRIS");
 
         System.out.print("Pilih metode: ");
@@ -121,10 +133,10 @@ public class MainKasir {
 
         if (t.konfirmasi()) {
             Struk.cetak(t);
-            rs.updateStatusPesanan(id, "SELESAI", currentUsername, currentRole);
+            rs.updateStatusPesanan(id, "LUNAS", currentUsername, currentRole);
             rs.saveData();
-            System.out.println("✅ Pembayaran berhasil!");
-            System.out.println("📤 Notifikasi telah dikirim ke Pelayan!");
+            System.out.println("✅ Pembayaran berhasil! Pesanan #" + id + " status menjadi LUNAS.");
+            System.out.println("📤 Notifikasi telah dikirim ke Pelayan dan Customer!");
         } else {
             System.out.println("❌ Pembayaran gagal.");
         }

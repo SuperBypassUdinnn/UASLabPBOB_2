@@ -23,10 +23,12 @@ public class MainKoki {
             
             System.out.println("\n===== MENU KOKI =====");
             System.out.println("Selamat datang, " + currentUsername + "!");
-            System.out.println("1. Lihat Pesanan SEDANG DIMASAK");
-            System.out.println("2. Tandai Pesanan SELESAI DIMASAK");
-            System.out.println("3. Lihat Notifikasi");
-            System.out.println("4. Lihat Detail Pesanan");
+            System.out.println("1. Lihat Pesanan DIPROSES (Masuk Dapur)");
+            System.out.println("2. Mulai Memasak -> SEDANG DIMASAK");
+            System.out.println("3. Lihat Pesanan SEDANG DIMASAK");
+            System.out.println("4. Selesai Memasak -> SIAP DISAJIKAN");
+            System.out.println("5. Lihat Notifikasi");
+            System.out.println("6. Lihat Detail Pesanan");
             System.out.println("0. Logout");
             System.out.print("Pilih: ");
 
@@ -35,15 +37,21 @@ public class MainKoki {
 
             switch (p) {
                 case 1:
-                    lihatPesananSedangDimasak();
+                    lihatPesananDiproses();
                     break;
                 case 2:
-                    selesaiDimasak();
+                    mulaiMemasak();
                     break;
                 case 3:
-                    tampilNotifikasi();
+                    lihatPesananSedangDimasak();
                     break;
                 case 4:
+                    selesaiDimasak();
+                    break;
+                case 5:
+                    tampilNotifikasi();
+                    break;
+                case 6:
                     lihatDetailPesanan();
                     break;
                 case 0:
@@ -64,11 +72,44 @@ public class MainKoki {
         }
     }
 
+    /**
+     * Koki melihat pesanan yang baru masuk ke dapur (dari pelayan)
+     */
+    private static void lihatPesananDiproses() {
+        System.out.println("\n=== PESANAN DIPROSES (Baru Masuk Dapur) ===");
+        rs.tampilPesananDenganStatus("DIPROSES");
+    }
+
+    /**
+     * Koki mulai memasak pesanan
+     * Status: DIPROSES -> SEDANG DIMASAK
+     */
+    private static void mulaiMemasak() {
+        System.out.println("\n=== PESANAN DIPROSES ===");
+        rs.tampilPesananDenganStatus("DIPROSES");
+
+        System.out.print("Masukkan ID pesanan yang akan mulai dimasak: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+
+        boolean ok = rs.updateStatusPesanan(id, "SEDANG DIMASAK", currentUsername, currentRole);
+        if (ok) {
+            System.out.println("✅ Pesanan #" + id + " sedang dimasak (Status: SEDANG DIMASAK).");
+            System.out.println("📤 Notifikasi telah dikirim ke Customer!");
+        } else {
+            System.out.println("❌ Pesanan dengan ID " + id + " tidak ditemukan atau status tidak valid.");
+        }
+    }
+
     private static void lihatPesananSedangDimasak() {
         System.out.println("\n=== PESANAN SEDANG DIMASAK ===");
         rs.tampilPesananDenganStatus("SEDANG DIMASAK");
     }
 
+    /**
+     * Koki selesai memasak
+     * Status: SEDANG DIMASAK -> SIAP DISAJIKAN
+     */
     private static void selesaiDimasak() {
         System.out.println("\n=== PESANAN SEDANG DIMASAK ===");
         rs.tampilPesananDenganStatus("SEDANG DIMASAK");
@@ -77,12 +118,12 @@ public class MainKoki {
         int id = sc.nextInt();
         sc.nextLine();
 
-        boolean ok = rs.updateStatusPesanan(id, "SELESAI DIMASAK", currentUsername, currentRole);
+        boolean ok = rs.updateStatusPesanan(id, "SIAP DISAJIKAN", currentUsername, currentRole);
         if (ok) {
-            System.out.println("✅ Pesanan #" + id + " sudah SELESAI DIMASAK.");
-            System.out.println("📤 Notifikasi telah dikirim ke Pelayan dan Kasir!");
+            System.out.println("✅ Pesanan #" + id + " selesai dimasak, siap disajikan (Status: SIAP DISAJIKAN).");
+            System.out.println("📤 Notifikasi telah dikirim ke Pelayan dan Customer!");
         } else {
-            System.out.println("❌ Pesanan ID tidak ditemukan.");
+            System.out.println("❌ Pesanan ID tidak ditemukan atau status tidak valid.");
         }
     }
     

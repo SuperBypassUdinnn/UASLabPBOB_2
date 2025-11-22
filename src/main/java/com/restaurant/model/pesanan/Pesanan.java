@@ -9,7 +9,8 @@ public class Pesanan {
 
     private int id;
     private Meja meja;
-    private String status; // MENUNGGU, SEDANG DIMASAK, SELESAI DIMASAK, SELESAI
+    // Status alur dunia nyata: MENUNGGU -> DIPROSES -> SEDANG DIMASAK -> SIAP DISAJIKAN -> DISAJIKAN -> LUNAS
+    private String status; // MENUNGGU, DIPROSES, SEDANG DIMASAK, SIAP DISAJIKAN, DISAJIKAN, LUNAS
     private List<DetailPesanan> items;
     
     // Tracking informasi untuk komunikasi yang lebih baik
