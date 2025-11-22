@@ -66,21 +66,21 @@ public class Main {
 
         System.out.println("Login berhasil! Selamat datang, " + akun.getNama() + ".");
         
-        // Routing berdasarkan role dengan passing user info
+        // Routing berdasarkan role
         String role = akun.getRole().toLowerCase();
         
         switch (role) {
             case "customer":
-                MainCustomer.run(akun.getUsername(), role);
+                MainCustomer.run();
                 break;
             case "pelayan":
-                MainPelayan.run(akun.getUsername(), role);
+                MainPelayan.run();
                 break;
             case "koki":
-                MainKoki.run(akun.getUsername(), role);
+                MainKoki.run();
                 break;
             case "kasir":
-                MainKasir.run(akun.getUsername(), role);
+                MainKasir.run();
                 break;
             default:
                 System.out.println("Role tidak dikenali: " + role);

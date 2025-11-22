@@ -3,7 +3,6 @@ package com.restaurant.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.restaurant.model.OrderEvent;
 import com.restaurant.model.menu.*;
 import com.restaurant.model.pesanan.*;
 import com.restaurant.model.transaksi.*;
@@ -95,11 +94,6 @@ public class RestaurantSystem {
         Pesanan p = new Pesanan(idCounter++, new Meja(noMeja));
         p.setStatus("MENUNGGU");
         daftarPesanan.add(p);
-
-        // Notifikasi untuk Pelayan bahwa ada pesanan baru
-        OrderEvent event = new OrderEvent(p.getId(), null, "MENUNGGU", "customer", "customer");
-        NotificationService.getInstance().addEvent(event);
-
         saveData();
         return p;
     }
@@ -135,34 +129,6 @@ public class RestaurantSystem {
         p.setStatus(statusBaru);
         saveData();
         return true;
-    }
-
-    /**
-     * Update status pesanan dengan tracking user dan notifikasi
-     */
-    public boolean updateStatusPesanan(int id, String statusBaru, String username, String role) {
-        Pesanan p = getPesananById(id);
-        if (p == null)
-            return false;
-
-        String statusLama = p.getStatus();
-
-        // Update status dengan tracking user
-        p.setStatus(statusBaru, username, role);
-
-        // Buat event untuk notifikasi
-        OrderEvent event = new OrderEvent(id, statusLama, statusBaru, role, username);
-        NotificationService.getInstance().addEvent(event);
-
-        saveData();
-        return true;
-    }
-
-    /**
-     * Mendapatkan notifikasi untuk role tertentu
-     */
-    public List<String> getNotificationsForRole(String role) {
-        return NotificationService.getInstance().getNotificationsForRole(role);
     }
 
     // =============================

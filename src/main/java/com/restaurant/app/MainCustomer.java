@@ -14,25 +14,15 @@ public class MainCustomer {
 
     private static RestaurantSystem rs = RestaurantSystem.getInstance();
     private static Scanner sc = InputUtil.sc;
-    private static String currentUsername;
-    private static String currentRole;
 
-    public static void run(String username, String role) {
-        currentUsername = username;
-        currentRole = role;
-        
+    public static void run() {
         while (true) {
-            // Tampilkan notifikasi terbaru
-            tampilNotifikasi();
-            
             System.out.println("\n===== MENU CUSTOMER =====");
-            System.out.println("Selamat datang, " + currentUsername + "!");
             System.out.println("1. Pilih Meja");
             System.out.println("2. Lihat Menu");
             System.out.println("3. Buat Pesanan");
             System.out.println("4. Lihat Status Pesanan");
             System.out.println("5. Bayar Pesanan");
-            System.out.println("6. Lihat Notifikasi");
             System.out.println("0. Logout");
             System.out.print("Pilih: ");
 
@@ -55,23 +45,10 @@ public class MainCustomer {
                 case 5:
                     bayarPesanan();
                     break;
-                case 6:
-                    tampilNotifikasi();
-                    break;
                 case 0:
                     return;
                 default:
                     System.out.println("Pilihan tidak valid!");
-            }
-        }
-    }
-    
-    private static void tampilNotifikasi() {
-        List<String> notifications = rs.getNotificationsForRole("customer");
-        if (!notifications.isEmpty()) {
-            System.out.println("\n📢 NOTIFIKASI TERBARU:");
-            for (String notif : notifications) {
-                System.out.println("  " + notif);
             }
         }
     }
@@ -173,8 +150,7 @@ public class MainCustomer {
 
         System.out.println("\n=== STATUS PESANAN ===");
         for (Pesanan p : pes) {
-            System.out.println(p.getInfoLengkap());
-            System.out.println(); // spacing
+            System.out.println("ID: " + p.getId() + " | Status: " + p.getStatus());
         }
     }
 
@@ -199,7 +175,7 @@ public class MainCustomer {
         if (siap == null) {
             System.out.println("Belum ada pesanan yang sudah disajikan.");
             System.out.println("Silakan tunggu pelayan menyajikan pesanan Anda terlebih dahulu.");
-            
+
             // Tampilkan status pesanan yang ada
             for (Pesanan p : pes) {
                 if (!p.getStatus().equals("LUNAS")) {
@@ -242,11 +218,10 @@ public class MainCustomer {
 
         if (t.konfirmasi()) {
             Struk.cetak(t);
-            rs.updateStatusPesanan(siap.getId(), "LUNAS", currentUsername, currentRole);
+            rs.updateStatusPesanan(siap.getId(), "LUNAS");
             System.out.println("✅ Pembayaran berhasil! Pesanan #" + siap.getId() + " status menjadi LUNAS.");
-            System.out.println("📤 Notifikasi telah dikirim ke Pelayan!");
         } else {
-            System.out.println("❌ Pembayaran gagal.");
+            System.out.println("Pembayaran gagal.");
         }
 
         rs.saveData();
