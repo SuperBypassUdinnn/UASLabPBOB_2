@@ -6,201 +6,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Utility class untuk konversi antara object dan JSON format
- * Format JSON sederhana tanpa library eksternal
- */
 public class JsonUtil {
 
-    /**
-     * Escape string untuk JSON
-     */
-    public static String escape(String str) {
-        if (str == null)
-            return "";
-        return str.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
-    }
-
-    /**
-     * Unescape string dari JSON
-     */
-    public static String unescape(String str) {
-        if (str == null)
-            return "";
-        return str.replace("\\t", "\t")
-                .replace("\\r", "\r")
-                .replace("\\n", "\n")
-                .replace("\\\"", "\"")
-                .replace("\\\\", "\\");
-    }
-
-    /**
-     * Build JSON object dari key-value pairs
-     */
-    public static String jsonObject(String... pairs) {
-        if (pairs.length % 2 != 0) {
-            throw new IllegalArgumentException("Pairs harus genap (key-value)");
-        }
-
-        StringBuilder sb = new StringBuilder("{");
-        for (int i = 0; i < pairs.length; i += 2) {
-            if (i > 0)
-                sb.append(", ");
-            String key = pairs[i];
-            String value = pairs[i + 1];
-
-            sb.append("\"").append(key).append("\": ");
-
-            // Check if value is already JSON
-            if (value.startsWith("{") || value.startsWith("[")) {
-                sb.append(value);
-            } else if (value.matches("^-?\\d+(\\.\\d+)?$")) {
-                sb.append(value); // Number
-            } else {
-                sb.append("\"").append(escape(value)).append("\""); // String
-            }
-        }
-        sb.append("}");
-        return sb.toString();
-    }
-
-    /**
-     * Build JSON array dari list of JSON objects
-     */
-    public static String jsonArray(List<String> items) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < items.size(); i++) {
-            if (i > 0)
-                sb.append(", ");
-            sb.append(items.get(i));
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-
-    /**
-     * Build JSON dengan root key dan array
-     */
-    public static String jsonWithRoot(String rootKey, String jsonArray) {
-        return "{\n  \"" + rootKey + "\": " + jsonArray + "\n}";
-    }
-
-    /**
-     * Build JSON dengan root key dan value
-     */
-    public static String jsonWithRoot(String rootKey, int value, String secondKey, String jsonArray) {
-        return "{\n  \"" + rootKey + "\": " + value + ",\n  \"" + secondKey + "\": " + jsonArray + "\n}";
-    }
-
-    /**
-     * Parse JSON dan ekstrak array dengan key tertentu
-     */
-    public static List<String> parseArray(String json, String arrayKey) {
-        List<String> result = new ArrayList<>();
-
-        // Pattern untuk menangkap array: "key": [ ... ]
-        Pattern pattern = Pattern.compile("\"" + Pattern.quote(arrayKey) + "\"\\s*:\\s*\\[(.*?)\\]", Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(json);
-
-        if (matcher.find()) {
-            String arrayContent = matcher.group(1).trim();
-            if (arrayContent.isEmpty()) {
-                return result;
-            }
-
-            // Split objects berdasarkan }, { atau },{
-            String[] objects = arrayContent.split("}\\s*,\\s*\\{");
-            for (int i = 0; i < objects.length; i++) {
-                String obj = objects[i].trim();
-                if (obj.isEmpty())
-                    continue;
-
-                if (!obj.startsWith("{")) {
-                    obj = "{" + obj;
-                }
-                if (!obj.endsWith("}")) {
-                    obj = obj + "}";
-                }
-                result.add(obj);
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Get string value from JSON object
-     */
-    public static String getString(String jsonObj, String key) {
-        Pattern pattern = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*\"([^\"]+)\"");
-        Matcher matcher = pattern.matcher(jsonObj);
-        if (matcher.find()) {
-            return unescape(matcher.group(1));
-        }
-        return null;
-    }
-
-    /**
-     * Get int value from JSON object
-     */
-    public static int getInt(String jsonObj, String key) {
-        Pattern pattern = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*(-?\\d+)");
-        Matcher matcher = pattern.matcher(jsonObj);
-        if (matcher.find()) {
-            try {
-                return Integer.parseInt(matcher.group(1));
-            } catch (NumberFormatException e) {
-                return 0;
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * Get double value from JSON object
-     */
-    public static double getDouble(String jsonObj, String key) {
-        Pattern pattern = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*(-?\\d+\\.?\\d*)");
-        Matcher matcher = pattern.matcher(jsonObj);
-        if (matcher.find()) {
-            try {
-                return Double.parseDouble(matcher.group(1));
-            } catch (NumberFormatException e) {
-                return 0.0;
-            }
-        }
-        return 0.0;
-    }
-
-    /**
-     * Get int value from root level JSON
-     */
-    public static int getRootInt(String json, String key) {
-        Pattern pattern = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*(-?\\d+)");
-        Matcher matcher = pattern.matcher(json);
-        if (matcher.find()) {
-            try {
-                return Integer.parseInt(matcher.group(1));
-            } catch (NumberFormatException e) {
-                return 0;
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * Read file as string
-     */
+    // --- READING FILE ---
     public static String readFile(String filePath) {
         StringBuilder content = new StringBuilder();
         File f = new File(filePath);
-        if (!f.exists()) {
-            return "{}";
-        }
+        if (!f.exists()) return "{}";
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
@@ -208,39 +20,152 @@ public class JsonUtil {
                 content.append(line).append("\n");
             }
         } catch (Exception e) {
-            System.err.println("[JsonUtil] Error membaca file: " + e.getMessage());
+            e.printStackTrace();
             return "{}";
         }
-
-        String result = content.toString().trim();
-        return result.isEmpty() ? "{}" : result;
+        return content.toString().trim();
     }
 
-    /**
-     * Write string to file (atomic)
-     */
+    // --- WRITING FILE ---
     public static void writeFile(String filePath, String content) {
         try {
             File f = new File(filePath);
             f.getParentFile().mkdirs();
-
-            java.nio.file.Path temp = java.nio.file.Files.createTempFile(
-                    f.getParentFile().toPath(),
-                    f.getName().replace(".json", ""),
-                    ".tmp");
-
-            try (PrintWriter pw = new PrintWriter(new FileWriter(temp.toFile()))) {
+            try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
                 pw.print(content);
             }
-
-            java.nio.file.Files.move(
-                    temp,
-                    f.toPath(),
-                    java.nio.file.StandardCopyOption.REPLACE_EXISTING,
-                    java.nio.file.StandardCopyOption.ATOMIC_MOVE);
         } catch (Exception e) {
-            System.err.println("[JsonUtil] Error menulis file: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    // --- JSON PARSING PINTAR (BRACKET COUNTER) ---
+    // Metode ini memperbaiki masalah "hanya 1 order" dengan menghitung kurung manual
+    public static List<String> parseArray(String json, String key) {
+        List<String> result = new ArrayList<>();
+        if (json == null || json.isEmpty()) return result;
+
+        // 1. Cari posisi awal key (misal: "pesanan": [ )
+        String searchKey = "\"" + key + "\"";
+        int keyIndex = json.indexOf(searchKey);
+        if (keyIndex == -1) return result;
+
+        // 2. Cari kurung siku pembuka '[' setelah key
+        int startBracket = json.indexOf("[", keyIndex + searchKey.length());
+        if (startBracket == -1) return result;
+
+        // 3. Cari kurung siku penutup ']' PASANGANNYA (Logic Utama)
+        int endBracket = -1;
+        int depth = 0; // Kedalaman kurung
+        
+        for (int i = startBracket; i < json.length(); i++) {
+            char c = json.charAt(i);
+            
+            if (c == '[') {
+                depth++;
+            } else if (c == ']') {
+                depth--;
+                // Jika kedalaman kembali ke 0, berarti ini penutup utama
+                if (depth == 0) {
+                    endBracket = i;
+                    break;
+                }
+            }
+        }
+
+        if (endBracket == -1) return result; // Struktur JSON rusak
+
+        // 4. Ambil isi di dalam array
+        String content = json.substring(startBracket + 1, endBracket).trim();
+        if (content.isEmpty()) return result;
+
+        // 5. Pecah menjadi object-object {...} dengan menghitung kurung kurawal
+        int objDepth = 0;
+        int objStart = -1;
+        
+        for (int i = 0; i < content.length(); i++) {
+            char c = content.charAt(i);
+            
+            // Abaikan spasi di luar object
+            if (objDepth == 0 && Character.isWhitespace(c)) continue;
+            
+            if (c == '{') {
+                if (objDepth == 0) objStart = i; // Mulai object baru
+                objDepth++;
+            } else if (c == '}') {
+                objDepth--;
+                if (objDepth == 0) {
+                    // Object selesai, masukkan ke list
+                    result.add(content.substring(objStart, i + 1));
+                }
+            }
+        }
+        
+        return result;
+    }
+
+    // --- HELPER LAINNYA ---
+
+    public static String getString(String json, String key) {
+        Pattern p = Pattern.compile("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"");
+        Matcher m = p.matcher(json);
+        if (m.find()) return unescape(m.group(1));
+        return "";
+    }
+
+    public static int getInt(String json, String key) {
+        Pattern p = Pattern.compile("\"" + key + "\"\\s*:\\s*(-?\\d+)");
+        Matcher m = p.matcher(json);
+        if (m.find()) {
+            try { return Integer.parseInt(m.group(1)); } catch (Exception e) {}
+        }
+        return 0;
+    }
+    
+    public static double getDouble(String json, String key) {
+        Pattern p = Pattern.compile("\"" + key + "\"\\s*:\\s*(-?\\d+\\.?\\d*)");
+        Matcher m = p.matcher(json);
+        if (m.find()) {
+            try { return Double.parseDouble(m.group(1)); } catch (Exception e) {}
+        }
+        return 0.0;
+    }
+    
+    public static int getRootInt(String json, String key) {
+        return getInt(json, key);
+    }
+
+    private static String unescape(String s) {
+        return s.replace("\\\"", "\"").replace("\\\\", "\\");
+    }
+    
+    public static String escape(String s) {
+        if(s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+    
+    // Helper simple untuk membuat JSON Object string
+    public static String jsonObject(String... pairs) {
+        StringBuilder sb = new StringBuilder("{");
+        for (int i = 0; i < pairs.length; i += 2) {
+            if (i > 0) sb.append(", ");
+            sb.append("\"").append(pairs[i]).append("\": ");
+            String val = pairs[i+1];
+            if (val.matches("^-?\\d+(\\.\\d+)?$") || val.equals("true") || val.equals("false")) {
+                sb.append(val);
+            } else {
+                sb.append("\"").append(escape(val)).append("\"");
+            }
+        }
+        sb.append("}");
+        return sb.toString();
+    }
+    
+    public static String jsonArray(List<String> items) {
+        return "[" + String.join(", ", items) + "]";
+    }
+    
+    public static String jsonWithRoot(String root, String content) {
+        return "{\"" + root + "\": " + content + "}";
     }
 }
