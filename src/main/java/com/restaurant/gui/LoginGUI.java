@@ -13,7 +13,7 @@ public class LoginGUI extends JFrame {
 
     private CardLayout cardLayout;
     private JPanel cardContainer;
-    private AuthService auth = AuthService.getInstance();
+    private AuthService auth = AuthService.getInstance(); // Pastikan AuthService punya method getInstance()
 
     // Palet Warna
     private final Color BG_COLOR = new Color(241, 243, 245);
@@ -72,7 +72,6 @@ public class LoginGUI extends JFrame {
         addSpacer(gbc, 15);
 
         addLabel(panel, "Login Sebagai", gbc);
-        // UPDATE: Menambahkan "Pelayan" di sini
         String[] loginRoles = {"Kasir", "Koki", "Pelayan", "Customer"};
         JComboBox<String> cbRole = createComboBox(loginRoles);
         panel.add(cbRole, gbc);
@@ -84,43 +83,42 @@ public class LoginGUI extends JFrame {
             String pass = new String(pfPass.getPassword());
             String role = (String) cbRole.getSelectedItem();
             
-            Akun a = auth.authenticate(user, pass, role);
+            // PERBAIKAN: Menggunakan auth.login(), lalu cek Role manual
+            Akun a = auth.login(user, pass);
+            
             if (a != null) {
-                JOptionPane.showMessageDialog(this, "Login Berhasil sebagai " + role);
-                dispose();
-                
-                // Routing ke GUI masing-masing
-               SwingUtilities.invokeLater(() -> {
-            if (role.equalsIgnoreCase("Kasir")) {
-                // Membuka GUI Kasir yang baru kita buat
-                new KasirGUI(a).setVisible(true); 
-                
-            } else if (role.equalsIgnoreCase("Koki")) {
-                // Membuka GUI Koki (pastikan class KokiGUI sudah ada)
-                new KokiGUI(a).setVisible(true); 
-                
-            } else if (role.equalsIgnoreCase("Pelayan")) {
-                // Membuka GUI Pelayan
-                new PelayanGUI(a).setVisible(true); 
-                
+                // Cek apakah Role yang dipilih sesuai dengan Role di akun
+                if (a.getRole().equalsIgnoreCase(role)) {
+                    JOptionPane.showMessageDialog(this, "Login Berhasil sebagai " + role);
+                    dispose();
+                    
+                    // Routing ke GUI masing-masing
+                    SwingUtilities.invokeLater(() -> {
+                        if (role.equalsIgnoreCase("Kasir")) {
+                            new KasirGUI(a).setVisible(true); 
+                        } else if (role.equalsIgnoreCase("Koki")) {
+                            new KokiGUI(a).setVisible(true); 
+                        } else if (role.equalsIgnoreCase("Pelayan")) {
+                            new PelayanGUI(a).setVisible(true); 
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Menu Customer belum tersedia.");
+                        }
+                    });
+                } else {
+                    JOptionPane.showMessageDialog(this, "Login Gagal! Role salah (Akun ini terdaftar sebagai " + a.getRole() + ")", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             } else {
-                JOptionPane.showMessageDialog(null, "Menu Customer belum tersedia.");
+                JOptionPane.showMessageDialog(this, "Login Gagal! Username atau Password salah.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-        // -----------------------------------
-        
-    } else {
-        JOptionPane.showMessageDialog(this, "Login Gagal! Cek username/pass/role.", "Error", JOptionPane.ERROR_MESSAGE);
-    }
-});
-panel.add(btnLogin, gbc);
+        panel.add(btnLogin, gbc);
 
         addFooterLink(panel, "Belum punya akun? ", "Daftar di sini", gbc, () -> cardLayout.show(cardContainer, "REGISTER"));
 
         return panel;
     }
 
-    //PANEL REGISTER
+    // PANEL REGISTER
     private JPanel createRegisterPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(CARD_COLOR);
@@ -150,7 +148,6 @@ panel.add(btnLogin, gbc);
         lblRole.setFont(LABEL_FONT);
         lblRole.setForeground(TEXT_PRIMARY);
         
-        // UPDATE: Menambahkan "Pelayan" di sini
         String[] roles = {"Kasir", "Koki", "Pelayan"};
         JComboBox<String> cbRole = createComboBox(roles);
 
@@ -177,29 +174,33 @@ panel.add(btnLogin, gbc);
             String pass = new String(pfPass.getPassword());
             String tipe = (String) cbTipe.getSelectedItem();
             
-            String finalRole;
-            if ("Customer".equals(tipe)) {
-                finalRole = "Customer";
-            } else {
-                // Ambil dari dropdown role (Kasir/Koki/Pelayan)
-                finalRole = (String) cbRole.getSelectedItem(); 
-            }
-
             if (user.isEmpty() || pass.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Harap isi semua kolom.", "Peringatan", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            // Proses Register
-            boolean success = auth.registerAccount(finalRole, user, pass, user); 
+            boolean success = false;
+
+            // PERBAIKAN: Memilah registerCustomer atau registerPegawai
+            if ("Customer".equals(tipe)) {
+                // Untuk customer, nama disamakan dengan username, email dikosongkan
+                success = auth.registerCustomer(user, user, pass, ""); 
+            } else {
+                // Untuk pegawai
+                String finalRole = (String) cbRole.getSelectedItem();
+                // Generate Email Dummy agar lolos validasi AuthService (harus @usk.ac.id)
+                String dummyEmail = user.replaceAll("\\s+", "").toLowerCase() + "@usk.ac.id";
+                
+                success = auth.registerPegawai(user, user, pass, dummyEmail, finalRole);
+            }
             
             if (success) {
-                JOptionPane.showMessageDialog(this, "Registrasi Berhasil sebagai " + finalRole + "! Silakan Login.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Registrasi Berhasil! Silakan Login.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
                 tfUser.setText("");
                 pfPass.setText("");
                 cardLayout.show(cardContainer, "LOGIN");
             } else {
-                JOptionPane.showMessageDialog(this, "Registrasi Gagal (Username mungkin sudah ada).", "Gagal", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Registrasi Gagal (Username sudah ada atau Email Pegawai tidak valid).", "Gagal", JOptionPane.ERROR_MESSAGE);
             }
         });
         panel.add(btnDaftar, gbc);
@@ -255,14 +256,5 @@ panel.add(btnLogin, gbc);
     public static void main(String[] args) {
         try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
         SwingUtilities.invokeLater(() -> new LoginGUI().setVisible(true));
-    }
-}
-class PelayanGUI extends JFrame {
-    public PelayanGUI(Akun a) {
-        setTitle("Dashboard Pelayan");
-        setSize(400, 300);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        add(new JLabel("Selamat Datang Pelayan: " + a.getUsername(), SwingConstants.CENTER));
     }
 }
