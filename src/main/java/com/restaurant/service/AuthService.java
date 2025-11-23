@@ -1,67 +1,85 @@
 package com.restaurant.service;
 
 import com.restaurant.model.akun.*;
-import java.io.*;
 import java.util.*;
+import com.restaurant.utils.JsonUtil;
 
 public class AuthService {
 
-    private static final String FILE_PATH = "src/main/resources/data/akun.txt";
+    private static final String FILE_PATH = "src/main/resources/data/akun.json";
     private List<Akun> akunList = new ArrayList<>();
 
     public AuthService() {
         loadAkun();
     }
 
-    // ----------------------------- LOAD DATA -----------------------------
+    // ----------------------------- LOAD DATA (JSON Format)
+    // -----------------------------
+    // Format JSON: { "akun": [ { "id": "C01", "nama": "...", "username": "...",
+    // "password": "...", "email": "...", "role": "customer" }, ... ] }
+    // Untuk customer: email bisa kosong
+    // Untuk pegawai: email harus dengan domain usk.ac.id
     private void loadAkun() {
-        try (BufferedReader br = new BufferedReader(new FileReader(FILE_PATH))) {
-            String line;
+        String json = JsonUtil.readFile(FILE_PATH);
 
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split(";");
+        if (json.equals("{}")) {
+            return; // File tidak ada atau kosong
+        }
 
-                if (data.length < 5)
-                    continue; // skip baris rusak
+        // Parse array akun dari JSON
+        List<String> akunObjects = JsonUtil.parseArray(json, "akun");
 
-                String id = data[0];
-                String nama = data[1];
-                String username = data[2];
-                String password = data[3];
-                String email;
-                String role;
+        for (String akunObj : akunObjects) {
+            try {
+                String id = JsonUtil.getString(akunObj, "id");
+                String nama = JsonUtil.getString(akunObj, "nama");
+                String username = JsonUtil.getString(akunObj, "username");
+                String password = JsonUtil.getString(akunObj, "password");
+                String email = JsonUtil.getString(akunObj, "email");
+                String role = JsonUtil.getString(akunObj, "role");
 
-                // Handle backward compatibility: format lama (5 kolom) vs format baru (6 kolom)
-                if (data.length == 5) {
-                    // Format lama: id;nama;username;password;role
-                    role = data[4];
-                    email = ""; // Default email kosong untuk data lama
-                } else {
-                    // Format baru: id;nama;username;password;email;role
-                    email = data[4];
-                    role = data[5];
+                if (id == null || nama == null || username == null || password == null || role == null) {
+                    continue; // Skip jika data tidak lengkap
                 }
+
+                if (email == null)
+                    email = ""; // Default email kosong
 
                 if (role.equalsIgnoreCase("customer")) {
                     akunList.add(new Customer(id, nama, username, password, email));
                 } else {
                     akunList.add(new Pegawai(id, nama, username, password, email, role));
                 }
+            } catch (Exception e) {
+                System.err.println("[AuthService] Error parsing akun: " + e.getMessage());
             }
-        } catch (Exception e) {
-            System.out.println("Gagal membaca akun.txt: " + e.getMessage());
         }
     }
 
     // ----------------------------- SAVE DATA -----------------------------
+    // Format: id;nama;username;password;email;role
     private void saveAkun() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_PATH))) {
+        try {
+            List<String> akunJsonList = new ArrayList<>();
+
             for (Akun a : akunList) {
-                bw.write(a.toFileFormat());
-                bw.newLine();
+                String akunJson = JsonUtil.jsonObject(
+                        "id", a.getId(),
+                        "nama", a.getNama(),
+                        "username", a.getUsername(),
+                        "password", a.getPassword(),
+                        "email", a.getEmail() == null ? "" : a.getEmail(),
+                        "role", a.getRole());
+                akunJsonList.add(akunJson);
             }
+
+            String akunArray = JsonUtil.jsonArray(akunJsonList);
+            String json = JsonUtil.jsonWithRoot("akun", akunArray);
+
+            JsonUtil.writeFile(FILE_PATH, json);
         } catch (Exception e) {
-            System.out.println("Gagal menulis akun.txt: " + e.getMessage());
+            System.out.println("Gagal menulis akun.json: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -76,7 +94,8 @@ public class AuthService {
         return null; // login gagal
     }
 
-    // ----------------------------- VALIDASI EMAIL DOMAIN -----------------------------
+    // ----------------------------- VALIDASI EMAIL DOMAIN
+    // -----------------------------
     public boolean isValidEmailDomain(String email, String requiredDomain) {
         if (email == null || !email.contains("@")) {
             return false;

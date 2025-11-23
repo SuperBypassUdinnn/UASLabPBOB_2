@@ -1,29 +1,30 @@
 package com.restaurant.service;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 import com.restaurant.model.menu.*;
 import com.restaurant.model.pesanan.*;
 import com.restaurant.model.transaksi.*;
+import com.restaurant.utils.JsonUtil;
 
 public class FileStorageService {
 
-    private static final String MENU_FILE = "src/main/resources/data/menu.txt";
-    private static final String PESANAN_FILE = "src/main/resources/data/pesanan.txt";
-    private static final String TRANSAKSI_FILE = "src/main/resources/data/transaksi.txt";
-    private static final String ID_FILE = "src/main/resources/data/id.txt";
+    private static final String MENU_FILE = "src/main/resources/data/menu.json";
+    private static final String PESANAN_FILE = "src/main/resources/data/pesanan.json";
+    private static final String TRANSAKSI_FILE = "src/main/resources/data/transaksi.json";
 
     // -----------------------
-    // LOAD MENU
+    // LOAD MENU (JSON Format)
+    // Format JSON: { "menu": [ { "jenis": "makanan", "nama": "...", "harga": 25000,
+    // ... }, ... ] }
     // -----------------------
     public static List<MenuItem> loadMenu() {
         List<MenuItem> hasil = new ArrayList<>();
-        File f = new File(MENU_FILE);
-        if (!f.exists() || f.length() == 0) {
-            // buat dummy & tulis file
+        String json = JsonUtil.readFile(MENU_FILE);
+
+        if (json.equals("{}")) {
+            // File tidak ada atau kosong, buat dummy
             hasil = dummyMenu();
             try {
                 saveMenu(hasil);
@@ -33,36 +34,34 @@ public class FileStorageService {
             return hasil;
         }
 
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty())
-                    continue;
-                String[] arr = line.split(";");
-                if (arr.length < 5) {
-                    System.err.println("[FileStorageService] Baris menu invalid, dilewati: " + line);
-                    continue;
-                }
-                String jenis = arr[0].trim().toLowerCase();
-                String nama = arr[1].trim();
-                double harga;
-                try {
-                    harga = Double.parseDouble(arr[2].trim());
-                } catch (NumberFormatException ex) {
-                    System.err.println("[FileStorageService] Harga invalid: " + line);
-                    continue;
-                }
+        // Parse array menu dari JSON
+        List<String> menuObjects = JsonUtil.parseArray(json, "menu");
 
-                if ("makanan".equals(jenis)) {
-                    hasil.add(new Makanan(nama, harga, arr[3].trim(), arr[4].trim()));
-                } else if ("minuman".equals(jenis)) {
-                    hasil.add(new Minuman(nama, harga, arr[3].trim(), arr[4].trim()));
-                } else {
-                    System.err.println("[FileStorageService] Jenis menu tidak dikenal: " + line);
+        for (String menuObj : menuObjects) {
+            try {
+                String jenis = JsonUtil.getString(menuObj, "jenis");
+                String nama = JsonUtil.getString(menuObj, "nama");
+                double harga = JsonUtil.getDouble(menuObj, "harga");
+
+                if (jenis == null || nama == null)
+                    continue;
+
+                if ("makanan".equalsIgnoreCase(jenis)) {
+                    String kategori = JsonUtil.getString(menuObj, "kategori");
+                    String tingkatPedas = JsonUtil.getString(menuObj, "tingkat_pedas");
+                    if (kategori != null && tingkatPedas != null) {
+                        hasil.add(new Makanan(nama, harga, kategori, tingkatPedas));
+                    }
+                } else if ("minuman".equalsIgnoreCase(jenis)) {
+                    String ukuran = JsonUtil.getString(menuObj, "ukuran");
+                    String suhu = JsonUtil.getString(menuObj, "suhu");
+                    if (ukuran != null && suhu != null) {
+                        hasil.add(new Minuman(nama, harga, ukuran, suhu));
+                    }
                 }
+            } catch (Exception e) {
+                System.err.println("[FileStorageService] Error parsing menu: " + menuObj);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         if (hasil.isEmpty()) {
@@ -70,69 +69,91 @@ public class FileStorageService {
             try {
                 saveMenu(hasil);
             } catch (IOException e) {
-                /* log */ }
+                // log error
+            }
         }
         return hasil;
     }
 
+    /**
+     * Save menu ke JSON format
+     */
     public static void saveMenu(List<MenuItem> menu) throws IOException {
-        File f = new File(MENU_FILE);
-        f.getParentFile().mkdirs();
-        // atomic write: tulis ke temp lalu pindahkan
-        Path temp = Files.createTempFile(f.getParentFile().toPath(), "menu", ".tmp");
-        try (PrintWriter pw = new PrintWriter(new FileWriter(temp.toFile()))) {
-            for (MenuItem m : menu) {
-                if (m instanceof Makanan) {
-                    Makanan mm = (Makanan) m;
-                    pw.printf("makanan;%s;%.0f;%s;%s%n", mm.getNama(), mm.getHarga(), mm.getKategori(),
-                            mm.getTingkatPedas());
-                } else if (m instanceof Minuman) {
-                    Minuman mn = (Minuman) m;
-                    pw.printf("minuman;%s;%.0f;%s;%s%n", mn.getNama(), mn.getHarga(), mn.getUkuran(), mn.getSuhu());
-                } else {
-                    pw.printf("lain;%s;%.0f;-%n", m.getNama(), m.getHarga());
-                }
+        List<String> menuJsonList = new ArrayList<>();
+
+        for (MenuItem m : menu) {
+            if (m instanceof Makanan) {
+                Makanan mm = (Makanan) m;
+                String jsonObj = JsonUtil.jsonObject(
+                        "jenis", "makanan",
+                        "nama", mm.getNama(),
+                        "harga", String.valueOf((int) mm.getHarga()),
+                        "kategori", mm.getKategori(),
+                        "tingkat_pedas", mm.getTingkatPedas());
+                menuJsonList.add(jsonObj);
+            } else if (m instanceof Minuman) {
+                Minuman mn = (Minuman) m;
+                String jsonObj = JsonUtil.jsonObject(
+                        "jenis", "minuman",
+                        "nama", mn.getNama(),
+                        "harga", String.valueOf((int) mn.getHarga()),
+                        "ukuran", mn.getUkuran(),
+                        "suhu", mn.getSuhu());
+                menuJsonList.add(jsonObj);
             }
         }
-        Files.move(temp, f.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING,
-                java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+
+        String jsonArray = JsonUtil.jsonArray(menuJsonList);
+        String json = JsonUtil.jsonWithRoot("menu", jsonArray);
+
+        JsonUtil.writeFile(MENU_FILE, json);
     }
 
     // -----------------------
-    // LOAD PESANAN
-    // format: id|meja|status|nama,jumlah,catatan#nama,jumlah,catatan
+    // LOAD PESANAN (JSON Format)
+    // Format JSON: { "nextId": 3, "pesanan": [ { "id": 1, "meja": 10, "status":
+    // "MENUNGGU", "items": [...] }, ... ] }
+    // Hanya pesanan aktif (tidak LUNAS) yang disimpan
     // -----------------------
     public static List<Pesanan> loadPesanan() {
         List<Pesanan> list = new ArrayList<>();
-        File f = new File(PESANAN_FILE);
-        if (!f.exists())
-            return list;
+        String json = JsonUtil.readFile(PESANAN_FILE);
 
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty())
+        if (json.equals("{}")) {
+            return list; // File tidak ada, return empty list
+        }
+
+        // Parse array pesanan dari JSON
+        List<String> pesananObjects = JsonUtil.parseArray(json, "pesanan");
+
+        for (String pesananObj : pesananObjects) {
+            try {
+                int id = JsonUtil.getInt(pesananObj, "id");
+                int meja = JsonUtil.getInt(pesananObj, "meja");
+                String status = JsonUtil.getString(pesananObj, "status");
+
+                if (status == null || status.isEmpty())
                     continue;
+
+                // Skip pesanan yang sudah LUNAS (tidak seharusnya ada di file)
+                if ("LUNAS".equals(status)) {
+                    continue;
+                }
+
+                Pesanan pes = new Pesanan(id, new Meja(meja));
+                pes.setStatus(status);
+
+                // Parse items - cari pattern items di dalam pesananObj
                 try {
-                    String[] p = line.split("\\|", -1);
-                    int id = Integer.parseInt(p[0].trim());
-                    int meja = Integer.parseInt(p[1].trim());
-                    String status = p[2].trim();
+                    List<String> items = JsonUtil.parseArray(pesananObj, "items");
+                    for (String itemObj : items) {
+                        String nama = JsonUtil.getString(itemObj, "nama");
+                        int jumlah = JsonUtil.getInt(itemObj, "jumlah");
+                        String catatan = JsonUtil.getString(itemObj, "catatan");
+                        if (catatan == null)
+                            catatan = "";
 
-                    Pesanan pes = new Pesanan(id, new Meja(meja));
-                    pes.setStatus(status);
-
-                    if (p.length > 3 && !p[3].trim().isEmpty()) {
-                        String[] items = p[3].split("#");
-                        for (String item : items) {
-                            if (item.trim().isEmpty())
-                                continue;
-                            String[] parts = item.split(",", -1);
-                            // parts: nama, jumlah, catatan
-                            String nama = parts[0];
-                            int jumlah = Integer.parseInt(parts[1]);
-                            String catatan = parts.length > 2 ? parts[2] : "";
-
+                        if (nama != null && jumlah > 0) {
                             MenuItem mi = findMenuByName(nama);
                             if (mi != null) {
                                 pes.tambahItem(new DetailPesanan(mi, jumlah, catatan));
@@ -142,91 +163,125 @@ public class FileStorageService {
                             }
                         }
                     }
-                    list.add(pes);
                 } catch (Exception e) {
-                    System.err.println("[FileStorageService] Gagal parse baris pesanan (dilewati): " + line);
+                    // Items mungkin kosong, skip
                 }
+
+                list.add(pes);
+            } catch (Exception e) {
+                System.err.println("[FileStorageService] Gagal parse pesanan: " + pesananObj);
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+
         return list;
     }
 
+    /**
+     * Load next ID dari JSON pesanan
+     */
+    public static int loadLastId() {
+        String json = JsonUtil.readFile(PESANAN_FILE);
+        if (json.equals("{}")) {
+            return 1; // Default ID
+        }
+
+        int nextId = JsonUtil.getRootInt(json, "nextId");
+        if (nextId == 0) {
+            // Calculate dari ID pesanan terbesar + 1
+            List<Pesanan> pesanan = loadPesanan();
+            int maxId = 0;
+            for (Pesanan p : pesanan) {
+                if (p.getId() > maxId) {
+                    maxId = p.getId();
+                }
+            }
+            return maxId + 1;
+        }
+        return nextId;
+    }
+
     // -----------------------
-    // SAVE PESANAN (atomic, overwrite keseluruhan daftar)
+    // SAVE PESANAN (JSON Format)
+    // Format JSON: { "nextId": 3, "pesanan": [ { "id": 1, "meja": 10, "status":
+    // "MENUNGGU", "items": [...] }, ... ] }
+    // Hanya pesanan aktif yang disimpan (status != LUNAS)
     // -----------------------
     public static void savePesanan(List<Pesanan> list, int nextId) {
         try {
-            File f = new File(PESANAN_FILE);
-            f.getParentFile().mkdirs();
-            Path temp = Files.createTempFile(f.getParentFile().toPath(), "pesanan", ".tmp");
-            try (PrintWriter pw = new PrintWriter(new FileWriter(temp.toFile()))) {
-                for (Pesanan p : list) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(p.getId()).append("|");
-                    sb.append(p.getMeja().getNomor()).append("|");
-                    sb.append(p.getStatus()).append("|");
-                    // items
-                    boolean first = true;
-                    for (DetailPesanan d : p.getItems()) {
-                        if (!first)
-                            sb.append("#");
-                        // escape commas/pipes if necessary (simple replace)
-                        String nama = d.getMenu().getNama().replace("|", " ").replace(",", " ");
-                        String cat = d.getCatatan() == null ? "" : d.getCatatan().replace("|", " ").replace(",", " ");
-                        sb.append(nama).append(",").append(d.getJumlah()).append(",").append(cat);
-                        first = false;
-                    }
-                    pw.println(sb.toString());
-                }
-            }
-            Files.move(temp, f.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING,
-                    java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            List<String> pesananJsonList = new ArrayList<>();
 
-            // simpan nextId
-            File idf = new File(ID_FILE);
-            try (PrintWriter idw = new PrintWriter(new FileWriter(idf))) {
-                idw.println(nextId);
+            for (Pesanan p : list) {
+                // Skip pesanan yang sudah LUNAS (tidak disimpan di pesanan.json)
+                if ("LUNAS".equals(p.getStatus())) {
+                    continue;
+                }
+
+                // Build items array
+                List<String> itemsJsonList = new ArrayList<>();
+                for (DetailPesanan d : p.getItems()) {
+                    String itemJson = JsonUtil.jsonObject(
+                            "nama", d.getMenu().getNama(),
+                            "jumlah", String.valueOf(d.getJumlah()),
+                            "catatan", d.getCatatan() == null ? "" : d.getCatatan());
+                    itemsJsonList.add(itemJson);
+                }
+
+                String itemsArray = JsonUtil.jsonArray(itemsJsonList);
+
+                // Build pesanan JSON object
+                String pesananJson = JsonUtil.jsonObject(
+                        "id", String.valueOf(p.getId()),
+                        "meja", String.valueOf(p.getMeja().getNomor()),
+                        "status", p.getStatus(),
+                        "items", itemsArray);
+
+                pesananJsonList.add(pesananJson);
             }
+
+            String pesananArray = JsonUtil.jsonArray(pesananJsonList);
+            String json = JsonUtil.jsonWithRoot("nextId", nextId, "pesanan", pesananArray);
+
+            JsonUtil.writeFile(PESANAN_FILE, json);
         } catch (Exception e) {
+            System.err.println("[FileStorageService] Error saving pesanan: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     // -----------------------
-    // LOAD LAST ID
-    // -----------------------
-    public static int loadLastId() {
-        File f = new File(ID_FILE);
-        if (!f.exists())
-            return 1;
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String s = br.readLine();
-            if (s != null && !s.trim().isEmpty())
-                return Integer.parseInt(s.trim());
-        } catch (Exception e) {
-        }
-        return 1;
-    }
-
-    // -----------------------
-    // SAVE TRANSAKSI (append, tiap transaksi satu baris)
-    // format: idPesanan|noMeja|total|jenis|waktu
+    // SAVE TRANSAKSI (JSON Format, append ke array)
+    // Format JSON: { "transaksi": [ { "idPesanan": 1, "noMeja": 10, "total": 90000,
+    // ... }, ... ] }
+    // Transaksi disimpan sebagai riwayat permanen
     // -----------------------
     public static void saveTransaksi(Transaksi t) {
         try {
-            File f = new File(TRANSAKSI_FILE);
-            f.getParentFile().mkdirs();
-            try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
-                pw.printf("%d|%d|%.0f|%s|%s%n",
-                        t.getPesanan().getId(),
-                        t.getPesanan().getMeja().getNomor(),
-                        t.getTotal(),
-                        t.getPembayaran().getJenis(),
-                        t.getWaktuFormatted());
+            // Load existing transaksi
+            String json = JsonUtil.readFile(TRANSAKSI_FILE);
+            List<String> transaksiJsonList = new ArrayList<>();
+
+            if (!json.equals("{}")) {
+                transaksiJsonList = JsonUtil.parseArray(json, "transaksi");
             }
+
+            // Build transaksi JSON object
+            String transaksiJson = JsonUtil.jsonObject(
+                    "idPesanan", String.valueOf(t.getPesanan().getId()),
+                    "noMeja", String.valueOf(t.getPesanan().getMeja().getNomor()),
+                    "total", String.valueOf((int) t.getTotal()),
+                    "jenisPembayaran", t.getPembayaran().getJenis(),
+                    "waktu", t.getWaktuFormatted(),
+                    "status", "LUNAS");
+
+            transaksiJsonList.add(transaksiJson);
+
+            String transaksiArray = JsonUtil.jsonArray(transaksiJsonList);
+            String newJson = JsonUtil.jsonWithRoot("transaksi", transaksiArray);
+
+            JsonUtil.writeFile(TRANSAKSI_FILE, newJson);
         } catch (Exception e) {
+            System.err.println("[FileStorageService] Error saving transaksi: " + e.getMessage());
             e.printStackTrace();
         }
     }

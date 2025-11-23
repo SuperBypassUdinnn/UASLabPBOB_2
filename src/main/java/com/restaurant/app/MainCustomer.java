@@ -17,6 +17,9 @@ public class MainCustomer {
 
     public static void run() {
         while (true) {
+            // Tampilkan notifikasi real-time sebelum menu
+            tampilRealTimeNotifications();
+
             System.out.println("\n===== MENU CUSTOMER =====");
             System.out.println("1. Pilih Meja");
             System.out.println("2. Lihat Menu");
@@ -225,5 +228,46 @@ public class MainCustomer {
         }
 
         rs.saveData();
+    }
+
+    /**
+     * Tampilkan notifikasi real-time untuk Customer
+     */
+    private static void tampilRealTimeNotifications() {
+        if (mejaDipilih == -1)
+            return; // Belum pilih meja
+
+        rs.refreshPesananFromFile(); // Reload dari file untuk update terbaru
+
+        // Dapatkan pesanan customer berdasarkan meja
+        List<Pesanan> pesananSaya = rs.getPesananByMeja(mejaDipilih);
+        if (pesananSaya.isEmpty())
+            return;
+
+        // Tampilkan update status pesanan
+        for (Pesanan p : pesananSaya) {
+            if (p.getStatus().equals("LUNAS"))
+                continue; // Skip yang sudah lunas
+
+            String notif = null;
+            switch (p.getStatus()) {
+                case "DIPROSES":
+                    notif = "✅ Pesanan #" + p.getId() + " diterima dan sedang dipersiapkan";
+                    break;
+                case "SEDANG DIMASAK":
+                    notif = "👨‍🍳 Pesanan #" + p.getId() + " sedang dimasak";
+                    break;
+                case "SIAP DISAJIKAN":
+                    notif = "🍽️ Pesanan #" + p.getId() + " selesai dimasak, menunggu disajikan";
+                    break;
+                case "DISAJIKAN":
+                    notif = "✅ Pesanan #" + p.getId() + " sudah disajikan, selamat menikmati!";
+                    break;
+            }
+
+            if (notif != null) {
+                System.out.println("\n📢 UPDATE: " + notif);
+            }
+        }
     }
 }
