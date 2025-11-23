@@ -65,10 +65,10 @@ public class Main {
         }
 
         System.out.println("Login berhasil! Selamat datang, " + akun.getNama() + ".");
-        
+
         // Routing berdasarkan role
         String role = akun.getRole().toLowerCase();
-        
+
         switch (role) {
             case "customer":
                 MainCustomer.run();
@@ -108,7 +108,7 @@ public class Main {
         System.out.println("3. Koki");
         System.out.println("4. Kasir");
         System.out.print("Pilih role: ");
-        
+
         if (!sc.hasNextInt()) {
             System.out.println("Input tidak valid!");
             sc.nextLine();
@@ -147,7 +147,8 @@ public class Main {
         if (isPegawai) {
             // Validasi email domain untuk pegawai
             if (!authService.isValidEmailDomain(email, "usk.ac.id")) {
-                System.out.println("Anda tidak memiliki akses untuk mendaftar sebagai karyawan. Hanya email dengan domain usk.ac.id yang dapat mendaftar sebagai karyawan.");
+                System.out.println(
+                        "Anda tidak memiliki akses untuk mendaftar sebagai karyawan. Hanya email dengan domain usk.ac.id yang dapat mendaftar sebagai karyawan.");
                 return;
             }
             success = authService.registerPegawai(nama, username, password, email, role);

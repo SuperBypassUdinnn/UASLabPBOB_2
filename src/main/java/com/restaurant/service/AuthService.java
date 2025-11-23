@@ -2,7 +2,6 @@ package com.restaurant.service;
 
 import com.restaurant.model.akun.*;
 import java.util.*;
-
 import com.restaurant.utils.JsonUtil;
 
 public class AuthService {
@@ -57,10 +56,8 @@ public class AuthService {
         }
     }
 
-    // ----------------------------- SAVE DATA (JSON Format)
-    // -----------------------------
-    // Format JSON: { "akun": [ { "id": "C01", "nama": "...", "username": "...",
-    // "password": "...", "email": "...", "role": "customer" }, ... ] }
+    // ----------------------------- SAVE DATA -----------------------------
+    // Format: id;nama;username;password;email;role
     private void saveAkun() {
         try {
             List<String> akunJsonList = new ArrayList<>();
