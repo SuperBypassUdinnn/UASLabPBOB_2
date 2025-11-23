@@ -1,7 +1,10 @@
 package com.restaurant.gui;
 
 import com.restaurant.model.akun.Akun;
-import com.restaurant.model.menu.MenuItem;
+// PERBAIKAN: Import spesifik agar tidak bentrok dengan java.awt.MenuItem
+import com.restaurant.model.menu.MenuItem; 
+import com.restaurant.model.menu.Makanan;
+import com.restaurant.model.menu.Minuman;
 import com.restaurant.model.pesanan.DetailPesanan;
 import com.restaurant.model.pesanan.Pesanan;
 import com.restaurant.service.RestaurantSystem;
@@ -9,7 +12,7 @@ import com.restaurant.service.RestaurantSystem;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*; 
-import java.util.List;
+import java.util.List; // Import spesifik untuk List agar aman
 
 public class PelayanGUI extends JFrame {
 
@@ -51,7 +54,7 @@ public class PelayanGUI extends JFrame {
         btnLogout.setForeground(Color.WHITE);
         btnLogout.setFocusPainted(false);
         btnLogout.setBorderPainted(false);
-        // PENTING UNTUK MAC: Agar warna background tombol muncul
+        // FIX MAC OS
         btnLogout.setOpaque(true); 
         
         btnLogout.addActionListener(e -> { dispose(); new LoginGUI().setVisible(true); });
@@ -85,6 +88,24 @@ public class PelayanGUI extends JFrame {
         // Row 1: Menu
         gbc.gridx=0; gbc.gridy=1; gbc.weightx=0; formPanel.add(new JLabel("Menu:"), gbc);
         cbMenu = new JComboBox<>();
+
+        // === LOGIKA DATA DUMMY ===
+        // Jika list menu kosong (file tidak terbaca), isi dengan data sementara
+        if (sys.getMenuList() == null || sys.getMenuList().isEmpty()) {
+            try {
+                // Menggunakan class Makanan dan Minuman karena MenuItem abstract
+                sys.getMenuList().add(new Makanan("Mie Aceh Spesial", 25000, "Main Course", "Pedas"));
+                sys.getMenuList().add(new Makanan("Nasi Goreng Kampung", 20000, "Main Course", "Sedang"));
+                sys.getMenuList().add(new Makanan("Ayam Penyet", 18000, "Main Course", "Pedas"));
+                sys.getMenuList().add(new Minuman("Es Teh Tarik", 12000, "Medium", "Dingin"));
+                sys.getMenuList().add(new Minuman("Kopi Gayo", 15000, "Medium", "Panas"));
+                sys.getMenuList().add(new Minuman("Jus Jeruk", 10000, "Large", "Dingin"));
+            } catch (Exception ignored) {
+                // Abaikan error jika terjadi duplikasi saat hot-reload
+            }
+        }
+
+        // Masukkan data ke ComboBox
         if(sys.getMenuList() != null) {
              for (MenuItem m : sys.getMenuList()) cbMenu.addItem(m.getNama());
         }
@@ -106,8 +127,7 @@ public class PelayanGUI extends JFrame {
         btnAdd.setForeground(Color.WHITE);
         btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btnAdd.setFocusPainted(false);
-        
-        // FIX UNTUK MAC OS AGAR TOMBOL TIDAK INVISIBLE
+        // FIX MAC OS
         btnAdd.setOpaque(true);
         btnAdd.setBorderPainted(false);
         
@@ -128,8 +148,7 @@ public class PelayanGUI extends JFrame {
         btnKirim.setForeground(Color.WHITE);
         btnKirim.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnKirim.setPreferredSize(new Dimension(100, 50));
-        
-        // FIX UNTUK MAC OS AGAR TOMBOL TIDAK INVISIBLE
+        // FIX MAC OS
         btnKirim.setOpaque(true);
         btnKirim.setBorderPainted(false);
         
@@ -147,7 +166,6 @@ public class PelayanGUI extends JFrame {
         int qty = (int) spinJumlah.getValue();
         String cat = tfCatatan.getText();
         
-        // Cari menu object
         MenuItem item = null;
         for(MenuItem m : sys.getMenuList()) if(m.getNama().equals(nama)) item = m;
         
