@@ -9,9 +9,6 @@ import com.restaurant.model.transaksi.*;
 
 public class RestaurantSystem {
 
-    // =============================
-    // SINGLETON BENAR-BENAR FINAL
-    // =============================
     private static final RestaurantSystem instance = new RestaurantSystem();
 
     public static RestaurantSystem getInstance() {
@@ -25,33 +22,29 @@ public class RestaurantSystem {
         idCounter = FileStorageService.loadLastId();
     }
 
-    // =============================
-    // ATRIBUT SISTEM
-    // =============================
     private List<MenuItem> menu = new ArrayList<>();
     private List<Pesanan> daftarPesanan = new ArrayList<>();
     private List<Meja> mejaList = new ArrayList<>();
-    private int idCounter = 1; // ID pesanan autoincrement
+    private int idCounter = 1;
 
-    // =============================
-    // INISIALISASI 30 MEJA
-    // =============================
     private void initMeja() {
         for (int i = 1; i <= 30; i++) {
             mejaList.add(new Meja(i));
         }
     }
 
-    // =============================
-    // AKSES MENU
-    // =============================
-    public List<MenuItem> getMenuList() {
-        return menu;
+    // ==========================================
+    // 2. PERBAIKAN: GETTER DAFTAR PESANAN
+    // ==========================================
+    public List<Pesanan> getDaftarPesanan() {
+        return daftarPesanan;
     }
+    // ==========================================
+
+    public List<MenuItem> getMenuList() { return menu; }
 
     public MenuItem getMenu(int index) {
-        if (index < 0 || index >= menu.size())
-            return null;
+        if (index < 0 || index >= menu.size()) return null;
         return menu.get(index);
     }
 
@@ -63,35 +56,23 @@ public class RestaurantSystem {
         }
     }
 
-    // =============================
-    // MEJA KOSONG
-    // =============================
     public List<Meja> getMejaKosong() {
         List<Meja> kosong = new ArrayList<>();
-
         for (Meja m : mejaList) {
             boolean dipakai = false;
-
             for (Pesanan p : daftarPesanan) {
-                if (p.getMeja().getNomor() == m.getNomor() &&
-                        !p.getStatus().equals("LUNAS")) {
+                if (p.getMeja().getNomor() == m.getNomor() && !p.getStatus().equals("LUNAS")) {
                     dipakai = true;
                     break;
                 }
             }
-
-            if (!dipakai)
-                kosong.add(m);
+            if (!dipakai) kosong.add(m);
         }
-
         return kosong;
     }
 
-    // =============================
-    // PESANAN
-    // =============================
     public Pesanan buatPesananKosong(int noMeja) {
-        refreshPesananFromFile(); // Reload untuk mendapatkan ID terbaru
+        refreshPesananFromFile();
         Pesanan p = new Pesanan(idCounter++, new Meja(noMeja));
         p.setStatus("MENUNGGU");
         daftarPesanan.add(p);
@@ -99,9 +80,6 @@ public class RestaurantSystem {
         return p;
     }
 
-    /**
-     * Mendapatkan pesanan dengan status tertentu untuk role (real-time)
-     */
     public List<Pesanan> getPesananByStatusForRole(String role, String status) {
         refreshPesananFromFile();
         return RealTimeUpdateService.getInstance().getPesananByStatusForRole(role, status);
@@ -109,84 +87,55 @@ public class RestaurantSystem {
 
     public List<Pesanan> getPesananByMeja(int meja) {
         List<Pesanan> hasil = new ArrayList<>();
-
         for (Pesanan p : daftarPesanan) {
-            if (p.getMeja().getNomor() == meja) {
-                hasil.add(p);
-            }
+            if (p.getMeja().getNomor() == meja) hasil.add(p);
         }
-
         return hasil;
     }
 
     public Pesanan getPesananById(int id) {
         for (Pesanan p : daftarPesanan) {
-            if (p.getId() == id)
-                return p;
+            if (p.getId() == id) return p;
         }
         return null;
     }
 
-    // =============================
-    // UPDATE STATUS PESANAN
-    // =============================
     public boolean updateStatusPesanan(int id, String statusBaru) {
-        // Reload dari file untuk mendapatkan data terbaru
         refreshPesananFromFile();
-
         Pesanan p = getPesananById(id);
-        if (p == null)
-            return false;
-
+        if (p == null) return false;
         p.setStatus(statusBaru);
         saveData();
         return true;
     }
 
-    /**
-     * Refresh pesanan dari file (untuk real-time update)
-     */
     public void refreshPesananFromFile() {
         daftarPesanan = FileStorageService.loadPesanan();
     }
 
-    /**
-     * Mendapatkan notifikasi real-time untuk role tertentu
-     */
     public List<String> getRealTimeNotifications(String role) {
         refreshPesananFromFile();
         return RealTimeUpdateService.getInstance().getNotificationsForRole(role, daftarPesanan);
     }
 
-    // =============================
-    // TAMPIL PESANAN PER STATUS
-    // =============================
     public void tampilPesananDenganStatus(String status) {
         boolean found = false;
         for (Pesanan p : daftarPesanan) {
             if (p.getStatus().equalsIgnoreCase(status)) {
-                System.out.println(
-                        "ID:" + p.getId() + " | Meja:" + p.getMeja().getNomor() + " | Total: Rp" + p.getTotal());
+                System.out.println("ID:" + p.getId() + " | Meja:" + p.getMeja().getNomor() + " | Total: Rp" + p.getTotal());
                 System.out.println(p.renderDetail());
                 found = true;
             }
         }
-        if (!found)
-            System.out.println("Tidak ada pesanan dengan status: " + status);
+        if (!found) System.out.println("Tidak ada pesanan dengan status: " + status);
     }
 
-    // =============================
-    // TRANSAKSI PEMBAYARAN
-    // =============================
     public Transaksi buatTransaksi(Pesanan p, Pembayaran pb) {
         Transaksi t = new Transaksi(p, pb);
         FileStorageService.saveTransaksi(t);
         return t;
     }
 
-    // =============================
-    // PERSISTENSI
-    // =============================
     public void saveData() {
         FileStorageService.savePesanan(daftarPesanan, idCounter);
     }
