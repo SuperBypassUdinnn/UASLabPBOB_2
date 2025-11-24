@@ -166,6 +166,9 @@ public class LoginGUI extends JFrame {
             }
 
             String role = (String) cbRole.getSelectedItem();
+            if (cbTipe.getSelectedItem().equals("Customer")) {
+                role = "Customer";
+            }
             int success = auth.register(nama, user, pass, email, role);
             switch (success) {
                 case 0 -> {
@@ -198,7 +201,7 @@ public class LoginGUI extends JFrame {
                 }
                 case 6 -> {
                     JOptionPane.showMessageDialog(this,
-                            "Password tidak kuat. Gunakan kombinasi Upper Case, Lower Case, Digit, dan Special Character",
+                            "Password tidak kuat: \n - Password minimal 8 karakter\n - Gunakan kombinasi Upper Case, Lower Case, Digit, dan Special Character.",
                             "GAGAL",
                             JOptionPane.ERROR_MESSAGE);
                 }

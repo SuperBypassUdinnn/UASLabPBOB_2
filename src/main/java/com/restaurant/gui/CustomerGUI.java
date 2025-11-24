@@ -1,7 +1,9 @@
 package com.restaurant.gui;
 
 import com.restaurant.model.akun.Akun;
+import com.restaurant.model.menu.Makanan; // Import Makanan
 import com.restaurant.model.menu.MenuItem;
+import com.restaurant.model.menu.Minuman; // Import Minuman
 import com.restaurant.model.pesanan.DetailPesanan;
 import com.restaurant.model.pesanan.Meja;
 import com.restaurant.model.pesanan.Pesanan;
@@ -61,25 +63,55 @@ public class CustomerGUI extends JFrame {
         refreshMejaKosong();
     }
 
-    // ... [BAGIAN createOrderPanel SAMA SEPERTI SEBELUMNYA, TIDAK DIUBAH] ...
     private JPanel createOrderPanel() {
         JPanel panel = new JPanel(new BorderLayout(15, 15));
         panel.setBackground(BG_COLOR);
         panel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        JPanel menuContainer = new JPanel(new GridLayout(0, 3, 10, 10));
-        menuContainer.setBackground(BG_COLOR);
+        // --- KIRI: MENU (DIPISAH MAKANAN & MINUMAN) ---
+
+        // Container Utama untuk Menu (Vertical Layout)
+        JPanel mainMenuContainer = new JPanel();
+        mainMenuContainer.setLayout(new BoxLayout(mainMenuContainer, BoxLayout.Y_AXIS));
+        mainMenuContainer.setBackground(BG_COLOR);
+
+        // 1. Panel Makanan
+        JPanel foodPanel = new JPanel(new GridLayout(0, 3, 10, 10));
+        foodPanel.setBackground(BG_COLOR);
+        foodPanel.setBorder(createSectionBorder("Makanan"));
+
+        // 2. Panel Minuman
+        JPanel drinkPanel = new JPanel(new GridLayout(0, 3, 10, 10));
+        drinkPanel.setBackground(BG_COLOR);
+        drinkPanel.setBorder(createSectionBorder("Minuman"));
+
+        // Sorting Menu
         List<MenuItem> menuList = sys.getMenuList();
         for (MenuItem item : menuList) {
-            menuContainer.add(createMenuItemCard(item));
+            if (item instanceof Makanan) {
+                foodPanel.add(createMenuItemCard(item));
+            } else if (item instanceof Minuman) {
+                drinkPanel.add(createMenuItemCard(item));
+            }
         }
-        JScrollPane scrollMenu = new JScrollPane(menuContainer);
-        scrollMenu.setBorder(BorderFactory.createTitledBorder(null, "Pilih Menu", TitledBorder.DEFAULT_JUSTIFICATION,
-                TitledBorder.DEFAULT_POSITION, new Font("Segoe UI", Font.BOLD, 14), Color.BLACK));
+
+        // Masukkan ke Container Utama
+        mainMenuContainer.add(foodPanel);
+        mainMenuContainer.add(Box.createVerticalStrut(20)); // Jarak antar section
+        mainMenuContainer.add(drinkPanel);
+
+        // Scroll Pane untuk Menu
+        JScrollPane scrollMenu = new JScrollPane(mainMenuContainer);
+        scrollMenu.setBorder(null); // Border dihandle oleh section border
         scrollMenu.setBackground(BG_COLOR);
         scrollMenu.getViewport().setBackground(BG_COLOR);
+
+        // Agar scroll speed lebih nyaman
+        scrollMenu.getVerticalScrollBar().setUnitIncrement(16);
+
         panel.add(scrollMenu, BorderLayout.CENTER);
 
+        // --- KANAN: PANEL INPUT & KERANJANG (TIDAK BERUBAH) ---
         JPanel rightPanel = new JPanel(new BorderLayout(10, 10));
         rightPanel.setBackground(BG_COLOR);
         rightPanel.setPreferredSize(new Dimension(360, 0));
@@ -104,9 +136,9 @@ public class CustomerGUI extends JFrame {
         lblPilih.setForeground(Color.BLACK);
         pnlInputMeja.add(lblPilih);
         tfNomorMeja = new JTextField(5);
-        tfNomorMeja.setBackground(Color.WHITE);
-        tfNomorMeja.setForeground(Color.BLACK);
-        tfNomorMeja.setCaretColor(Color.BLACK);
+        tfNomorMeja.setOpaque(true);
+        tfNomorMeja.setForeground(Color.WHITE);
+        tfNomorMeja.setCaretColor(Color.WHITE);
         pnlInputMeja.add(tfNomorMeja);
 
         JPanel pnlTopRight = new JPanel(new BorderLayout());
@@ -159,6 +191,8 @@ public class CustomerGUI extends JFrame {
         JButton btnClear = new JButton("Reset");
         btnClear.setBackground(new Color(220, 53, 69));
         btnClear.setForeground(Color.WHITE);
+        btnClear.setOpaque(true);
+        btnClear.setBorderPainted(false);
         btnClear.addActionListener(e -> resetKeranjang());
         JPanel pnlBtns = new JPanel(new GridLayout(1, 2, 5, 0));
         pnlBtns.setBackground(BG_COLOR);
@@ -173,7 +207,17 @@ public class CustomerGUI extends JFrame {
         return panel;
     }
 
-    // ... [METODE HELPER ORDER PANEL LAINNYA SAMA] ...
+    // --- HELPER BORDER BARU ---
+    private TitledBorder createSectionBorder(String title) {
+        return BorderFactory.createTitledBorder(
+                new LineBorder(Color.GRAY, 1),
+                title,
+                TitledBorder.DEFAULT_JUSTIFICATION,
+                TitledBorder.DEFAULT_POSITION,
+                new Font("Segoe UI", Font.BOLD, 14),
+                Color.BLACK);
+    }
+
     private void refreshMejaKosong() {
         pnlMejaKosong.removeAll();
         sys.refreshPesananFromFile();
@@ -287,7 +331,7 @@ public class CustomerGUI extends JFrame {
         }
     }
 
-    // --- TAB HISTORY & STATUS (DIMODIFIKASI) ---
+    // --- TAB HISTORY & STATUS ---
     private JComponent createHistoryPanel() {
         pnlStatus = new JPanel();
         pnlStatus.setLayout(new BoxLayout(pnlStatus, BoxLayout.Y_AXIS));
@@ -334,22 +378,19 @@ public class CustomerGUI extends JFrame {
         };
     }
 
-    // --- MODIFIKASI TAMPILAN HISTORY CARD ---
     private JPanel createHistoryCard(Pesanan p) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBorder(new CompoundBorder(
                 new LineBorder(Color.LIGHT_GRAY),
                 new EmptyBorder(10, 10, 10, 10)));
         card.setBackground(CARD_BG);
-        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150)); // Tinggi ditambah untuk detail
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
 
-        // Header Kiri: ID dan Status
         String friendlyStatus = getFriendlyStatus(p.getStatus());
         String headerTxt = "<html><b style='color:black; font-size:14px;'>Order #" + p.getId() + "</b> (Meja "
                 + p.getMeja().getNomor() + ")<br>"
                 + "Status: <span style='color:#2563EB; font-weight:bold;'>" + friendlyStatus + "</span></html>";
 
-        // Isi: Detail Menu (Hanya menampilkan ringkasan singkat agar tidak penuh)
         StringBuilder detailTxt = new StringBuilder("<html><body style='color:#555; font-size:11px;'>");
         detailTxt.append("Menu: ");
         List<DetailPesanan> items = p.getItems();
@@ -368,7 +409,6 @@ public class CustomerGUI extends JFrame {
 
         card.add(infoPanel, BorderLayout.CENTER);
 
-        // Tombol Aksi (Kanan)
         if ("LUNAS".equals(p.getStatus())) {
             JButton btn = new JButton("Struk");
             btn.setBackground(HEADER_COLOR);
