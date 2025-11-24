@@ -1,8 +1,8 @@
 package com.restaurant.service;
 
 import com.restaurant.model.akun.*;
-import java.util.*;
 import com.restaurant.utils.JsonUtil;
+import java.util.*;
 
 public class AuthService {
 
@@ -15,7 +15,7 @@ public class AuthService {
     }
 
     private static final String FILE_PATH = "src/main/resources/data/akun.json";
-    private List<Akun> akunList = new ArrayList<>();
+    private final List<Akun> akunList = new ArrayList<>();
 
     private AuthService() {
         loadAkun();
@@ -65,7 +65,6 @@ public class AuthService {
             }
             JsonUtil.writeFile(FILE_PATH, JsonUtil.jsonWithRoot("akun", JsonUtil.jsonArray(akunJsonList)));
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

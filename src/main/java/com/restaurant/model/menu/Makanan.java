@@ -1,8 +1,8 @@
 package com.restaurant.model.menu;
 
 public class Makanan extends MenuItem {
-    private String kategori;
-    private String tingkatPedas;
+    private final String kategori;
+    private final String tingkatPedas;
 
     public Makanan(String nama, double harga, String kategori, String tingkatPedas) {
         super(nama, harga);

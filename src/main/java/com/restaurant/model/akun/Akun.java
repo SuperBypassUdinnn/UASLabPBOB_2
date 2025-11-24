@@ -1,11 +1,11 @@
 package com.restaurant.model.akun;
 
 public abstract class Akun {
-    private String id;
-    private String nama;
-    private String username;
-    private String password;
-    private String email;
+    private final String id;
+    private final String nama;
+    private final String username;
+    private final String password;
+    private final String email;
 
     public Akun(String id, String nama, String username, String password, String email) {
         this.id = id;

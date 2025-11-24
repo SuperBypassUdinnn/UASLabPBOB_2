@@ -4,19 +4,22 @@ import com.restaurant.model.akun.Akun;
 import com.restaurant.model.pesanan.DetailPesanan;
 import com.restaurant.model.pesanan.Pesanan;
 import com.restaurant.service.RestaurantSystem;
-
-import javax.swing.*;
-import javax.swing.border.*;
 import java.awt.*;
 import java.util.List;
-import javax.swing.Timer;
+import javax.swing.*;
+import javax.swing.border.*;
 
 public class PelayanGUI extends JFrame {
 
-    private RestaurantSystem sys = RestaurantSystem.getInstance();
+    private final RestaurantSystem sys = RestaurantSystem.getInstance();
     private JPanel pnlPesananMasuk;
     private JPanel pnlSiapSaji;
-    private Timer refreshTimer;
+    private final Timer refreshTimer;
+
+    // --- WARNA TEMA LIGHT ---
+    private final Color BG_COLOR = new Color(248, 250, 252);
+    private final Color HEADER_COLOR = new Color(59, 130, 246);
+    private final Color CARD_BG = Color.WHITE;
 
     public PelayanGUI(Akun akun) {
         setTitle("Dashboard Pelayan - " + akun.getNama());
@@ -24,17 +27,22 @@ public class PelayanGUI extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        add(createHeader(), BorderLayout.NORTH);
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(BG_COLOR);
+
+        mainPanel.add(createHeader(), BorderLayout.NORTH);
 
         JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setBackground(BG_COLOR);
 
-        // Tab 1: Terima Pesanan (Dari Customer -> Kirim ke Dapur)
+        // Tab 1: Terima Pesanan
         tabbedPane.addTab("Pesanan Masuk (Menunggu)", createIncomingPanel());
 
-        // Tab 2: Antar Pesanan (Dari Dapur -> Ke Meja)
+        // Tab 2: Antar Pesanan
         tabbedPane.addTab("Siap Disajikan (Dari Dapur)", createServePanel());
 
-        add(tabbedPane, BorderLayout.CENTER);
+        mainPanel.add(tabbedPane, BorderLayout.CENTER);
+        setContentPane(mainPanel);
 
         refreshTimer = new Timer(3000, e -> refreshLists());
         refreshTimer.start();
@@ -44,13 +52,23 @@ public class PelayanGUI extends JFrame {
     private JComponent createIncomingPanel() {
         pnlPesananMasuk = new JPanel();
         pnlPesananMasuk.setLayout(new BoxLayout(pnlPesananMasuk, BoxLayout.Y_AXIS));
-        return new JScrollPane(pnlPesananMasuk);
+        pnlPesananMasuk.setBackground(BG_COLOR);
+
+        JScrollPane sp = new JScrollPane(pnlPesananMasuk);
+        sp.setBorder(null);
+        sp.getViewport().setBackground(BG_COLOR);
+        return sp;
     }
 
     private JComponent createServePanel() {
         pnlSiapSaji = new JPanel();
         pnlSiapSaji.setLayout(new BoxLayout(pnlSiapSaji, BoxLayout.Y_AXIS));
-        return new JScrollPane(pnlSiapSaji);
+        pnlSiapSaji.setBackground(BG_COLOR);
+
+        JScrollPane sp = new JScrollPane(pnlSiapSaji);
+        sp.setBorder(null);
+        sp.getViewport().setBackground(BG_COLOR);
+        return sp;
     }
 
     private void refreshLists() {
@@ -73,6 +91,20 @@ public class PelayanGUI extends JFrame {
             }
         }
 
+        // Pesan kosong jika tidak ada data
+        if (pnlPesananMasuk.getComponentCount() == 0) {
+            JLabel lbl = new JLabel("Tidak ada pesanan baru.");
+            lbl.setForeground(Color.GRAY);
+            lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+            pnlPesananMasuk.add(lbl);
+        }
+        if (pnlSiapSaji.getComponentCount() == 0) {
+            JLabel lbl = new JLabel("Tidak ada pesanan siap saji.");
+            lbl.setForeground(Color.GRAY);
+            lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+            pnlSiapSaji.add(lbl);
+        }
+
         pnlPesananMasuk.revalidate();
         pnlPesananMasuk.repaint();
         pnlSiapSaji.revalidate();
@@ -82,16 +114,17 @@ public class PelayanGUI extends JFrame {
     private JPanel createCard(Pesanan p, String btnText, String nextStatus) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBorder(new CompoundBorder(new LineBorder(Color.LIGHT_GRAY), new EmptyBorder(10, 10, 10, 10)));
-        card.setBackground(Color.WHITE);
+        card.setBackground(CARD_BG);
         card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
 
         // Info Pesanan
-        String info = "<html><b>Meja " + p.getMeja().getNomor() + "</b> (Order #" + p.getId() + ")<br>"
-                + "Pelanggan: " + p.getNamaPelanggan() + "</html>";
+        String info = "<html><b style='color:black;'>Meja " + p.getMeja().getNomor() + "</b> (Order #" + p.getId()
+                + ")<br>"
+                + "<span style='color:gray;'>Pelanggan: " + p.getNamaPelanggan() + "</span></html>";
         JLabel lblInfo = new JLabel(info);
         lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        // Detail Menu (Tooltip / Text)
+        // Detail Menu
         StringBuilder detail = new StringBuilder("<html><font color='gray'>");
         for (DetailPesanan dp : p.getItems()) {
             detail.append("- ").append(dp.getMenu().getNama()).append(" x").append(dp.getJumlah()).append("<br>");
@@ -100,13 +133,13 @@ public class PelayanGUI extends JFrame {
         JLabel lblDetail = new JLabel(detail.toString());
 
         JPanel left = new JPanel(new BorderLayout());
-        left.setBackground(Color.WHITE);
+        left.setBackground(CARD_BG);
         left.add(lblInfo, BorderLayout.NORTH);
         left.add(lblDetail, BorderLayout.CENTER);
 
         // Tombol Aksi
         JButton btnAction = new JButton(btnText);
-        btnAction.setBackground(new Color(37, 99, 235));
+        btnAction.setBackground(HEADER_COLOR);
         btnAction.setForeground(Color.WHITE);
         btnAction.setOpaque(true);
         btnAction.setBorderPainted(false);
@@ -124,7 +157,7 @@ public class PelayanGUI extends JFrame {
 
     private JPanel createHeader() {
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(new Color(59, 130, 246));
+        header.setBackground(HEADER_COLOR);
         header.setBorder(new EmptyBorder(10, 20, 10, 20));
 
         JLabel lblTitle = new JLabel("Pelayan Dashboard");
@@ -132,6 +165,10 @@ public class PelayanGUI extends JFrame {
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
 
         JButton btnLogout = new JButton("Logout");
+        btnLogout.setBackground(new Color(220, 53, 69));
+        btnLogout.setForeground(Color.WHITE);
+        btnLogout.setOpaque(true);
+        btnLogout.setBorderPainted(false);
         btnLogout.addActionListener(e -> {
             refreshTimer.stop();
             dispose();
