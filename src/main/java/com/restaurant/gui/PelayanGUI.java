@@ -1,7 +1,6 @@
 package com.restaurant.gui;
 
 import com.restaurant.model.akun.Akun;
-import com.restaurant.model.menu.MenuItem;
 import com.restaurant.model.pesanan.DetailPesanan;
 import com.restaurant.model.pesanan.Pesanan;
 import com.restaurant.service.RestaurantSystem;
@@ -15,227 +14,112 @@ import javax.swing.Timer;
 public class PelayanGUI extends JFrame {
 
     private RestaurantSystem sys = RestaurantSystem.getInstance();
-
-    // Komponen Tab Input
-    private JTextField tfMeja;
-    private JComboBox<String> cbMenu;
-    private JSpinner spinJumlah;
-    private JTextField tfCatatan;
-    private DefaultListModel<String> cartModel;
-    private java.util.List<DetailPesanan> tempItems = new java.util.ArrayList<>();
-
-    // Komponen Tab Sajikan
+    private JPanel pnlPesananMasuk;
     private JPanel pnlSiapSaji;
     private Timer refreshTimer;
 
     public PelayanGUI(Akun akun) {
         setTitle("Dashboard Pelayan - " + akun.getNama());
-        setSize(800, 700);
+        setSize(900, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        // Header
         add(createHeader(), BorderLayout.NORTH);
 
         JTabbedPane tabbedPane = new JTabbedPane();
 
-        // Tab 1: Input Order (Kode lama dipindahkan ke method createInputPanel)
-        tabbedPane.addTab("Input Pesanan Baru", createInputPanel());
+        // Tab 1: Terima Pesanan (Dari Customer -> Kirim ke Dapur)
+        tabbedPane.addTab("Pesanan Masuk (Menunggu)", createIncomingPanel());
 
-        // Tab 2: Antar Pesanan (Fitur Baru untuk replace CLI Sajikan Pesanan)
-        tabbedPane.addTab("Antar Pesanan (Siap Saji)", createServePanel());
+        // Tab 2: Antar Pesanan (Dari Dapur -> Ke Meja)
+        tabbedPane.addTab("Siap Disajikan (Dari Dapur)", createServePanel());
 
         add(tabbedPane, BorderLayout.CENTER);
 
-        // Auto Refresh untuk Tab Antar Pesanan
-        refreshTimer = new Timer(3000, e -> refreshServeList());
+        refreshTimer = new Timer(3000, e -> refreshLists());
         refreshTimer.start();
-        refreshServeList();
+        refreshLists();
     }
 
-    // PANEL 1: INPUT PESANAN (Logika Lama)
-    private JPanel createInputPanel() {
-        JPanel content = new JPanel(new BorderLayout(15, 15));
-        content.setBorder(new EmptyBorder(20, 20, 20, 20));
-        content.setBackground(new Color(248, 250, 252));
-
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBackground(Color.WHITE);
-        formPanel.setBorder(new CompoundBorder(new LineBorder(Color.LIGHT_GRAY), new EmptyBorder(15, 15, 15, 15)));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        formPanel.add(new JLabel("Nomor Meja:"), gbc);
-        tfMeja = new JTextField();
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        gbc.weightx = 1.0;
-        formPanel.add(tfMeja, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weightx = 0;
-        formPanel.add(new JLabel("Menu:"), gbc);
-        cbMenu = new JComboBox<>();
-        // Load Menu
-        if (sys.getMenuList() != null) {
-            for (MenuItem m : sys.getMenuList())
-                cbMenu.addItem(m.getNama());
-        }
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        gbc.weightx = 1.0;
-        formPanel.add(cbMenu, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.weightx = 0;
-        formPanel.add(new JLabel("Jumlah:"), gbc);
-        spinJumlah = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        gbc.weightx = 1.0;
-        formPanel.add(spinJumlah, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.weightx = 0;
-        formPanel.add(new JLabel("Catatan:"), gbc);
-        tfCatatan = new JTextField();
-        gbc.gridx = 1;
-        gbc.gridy = 3;
-        gbc.weightx = 1.0;
-        formPanel.add(tfCatatan, gbc);
-
-        JButton btnAdd = new JButton("Tambah Item");
-        btnAdd.setBackground(new Color(59, 130, 246));
-        btnAdd.setForeground(Color.WHITE);
-        btnAdd.addActionListener(e -> tambahKeKeranjang());
-        gbc.gridx = 1;
-        gbc.gridy = 4;
-        formPanel.add(btnAdd, gbc);
-
-        content.add(formPanel, BorderLayout.NORTH);
-
-        cartModel = new DefaultListModel<>();
-        JList<String> cartList = new JList<>(cartModel);
-        cartList.setBorder(new TitledBorder("Keranjang Sementara"));
-        content.add(new JScrollPane(cartList), BorderLayout.CENTER);
-
-        JButton btnKirim = new JButton("KIRIM KE DAPUR");
-        btnKirim.setBackground(new Color(34, 197, 94));
-        btnKirim.setForeground(Color.WHITE);
-        btnKirim.setPreferredSize(new Dimension(100, 50));
-        btnKirim.addActionListener(e -> kirimPesanan());
-
-        content.add(btnKirim, BorderLayout.SOUTH);
-        return content;
+    private JComponent createIncomingPanel() {
+        pnlPesananMasuk = new JPanel();
+        pnlPesananMasuk.setLayout(new BoxLayout(pnlPesananMasuk, BoxLayout.Y_AXIS));
+        return new JScrollPane(pnlPesananMasuk);
     }
 
-    // PANEL 2: SERVE ORDER (Logika Baru Integrasi CLI)
     private JComponent createServePanel() {
         pnlSiapSaji = new JPanel();
         pnlSiapSaji.setLayout(new BoxLayout(pnlSiapSaji, BoxLayout.Y_AXIS));
-        pnlSiapSaji.setBackground(new Color(248, 250, 252));
         return new JScrollPane(pnlSiapSaji);
     }
 
-    private void refreshServeList() {
-        pnlSiapSaji.removeAll();
+    private void refreshLists() {
         sys.refreshPesananFromFile();
         List<Pesanan> all = sys.getDaftarPesanan();
 
-        boolean adaData = false;
+        pnlPesananMasuk.removeAll();
+        pnlSiapSaji.removeAll();
+
         for (Pesanan p : all) {
-            // Pelayan hanya melihat pesanan yg "SIAP DISAJIKAN" (Output Koki)
-            if ("SIAP DISAJIKAN".equals(p.getStatus())) {
-                adaData = true;
-                JPanel card = new JPanel(new BorderLayout());
-                card.setBorder(new CompoundBorder(new LineBorder(Color.LIGHT_GRAY), new EmptyBorder(10, 10, 10, 10)));
-                card.setBackground(Color.WHITE);
-                card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
-
-                JLabel lblInfo = new JLabel(
-                        "<html><b>Meja " + p.getMeja().getNomor() + "</b> - Pesanan #" + p.getId() + "</html>");
-                lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-
-                JButton btnSajikan = new JButton("Sajikan ke Meja");
-                btnSajikan.setBackground(new Color(34, 197, 94));
-                btnSajikan.setForeground(Color.WHITE);
-
-                // Action: Ubah status jadi DISAJIKAN (Agar muncul di Kasir)
-                btnSajikan.addActionListener(e -> {
-                    sys.updateStatusPesanan(p.getId(), "DISAJIKAN");
-                    JOptionPane.showMessageDialog(this, "Pesanan disajikan ke Meja " + p.getMeja().getNomor());
-                    refreshServeList();
-                });
-
-                card.add(lblInfo, BorderLayout.CENTER);
-                card.add(btnSajikan, BorderLayout.EAST);
-
-                pnlSiapSaji.add(card);
+            // TAB 1: Pesanan dari Customer (Status: MENUNGGU)
+            if ("MENUNGGU".equals(p.getStatus())) {
+                pnlPesananMasuk.add(createCard(p, "Kirim ke Dapur", "DIPROSES"));
+                pnlPesananMasuk.add(Box.createVerticalStrut(10));
+            }
+            // TAB 2: Pesanan dari Koki (Status: SIAP DISAJIKAN)
+            else if ("SIAP DISAJIKAN".equals(p.getStatus())) {
+                pnlSiapSaji.add(createCard(p, "Sajikan ke Meja", "DISAJIKAN"));
                 pnlSiapSaji.add(Box.createVerticalStrut(10));
             }
         }
 
-        if (!adaData) {
-            JLabel empty = new JLabel("Tidak ada pesanan yang perlu diantar.");
-            empty.setAlignmentX(CENTER_ALIGNMENT);
-            pnlSiapSaji.add(empty);
-        }
-
+        pnlPesananMasuk.revalidate();
+        pnlPesananMasuk.repaint();
         pnlSiapSaji.revalidate();
         pnlSiapSaji.repaint();
     }
 
-    // --- Helper Methods untuk Input ---
-    private void tambahKeKeranjang() {
-        String nama = (String) cbMenu.getSelectedItem();
-        if (nama == null)
-            return;
-        int qty = (int) spinJumlah.getValue();
-        String cat = tfCatatan.getText();
+    private JPanel createCard(Pesanan p, String btnText, String nextStatus) {
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBorder(new CompoundBorder(new LineBorder(Color.LIGHT_GRAY), new EmptyBorder(10, 10, 10, 10)));
+        card.setBackground(Color.WHITE);
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
 
-        MenuItem item = null;
-        for (MenuItem m : sys.getMenuList())
-            if (m.getNama().equals(nama))
-                item = m;
+        // Info Pesanan
+        String info = "<html><b>Meja " + p.getMeja().getNomor() + "</b> (Order #" + p.getId() + ")<br>"
+                + "Pelanggan: " + p.getNamaPelanggan() + "</html>";
+        JLabel lblInfo = new JLabel(info);
+        lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        if (item != null) {
-            tempItems.add(new DetailPesanan(item, qty, cat));
-            cartModel.addElement(nama + " x" + qty);
-            spinJumlah.setValue(1);
-            tfCatatan.setText("");
+        // Detail Menu (Tooltip / Text)
+        StringBuilder detail = new StringBuilder("<html><font color='gray'>");
+        for (DetailPesanan dp : p.getItems()) {
+            detail.append("- ").append(dp.getMenu().getNama()).append(" x").append(dp.getJumlah()).append("<br>");
         }
-    }
+        detail.append("</font></html>");
+        JLabel lblDetail = new JLabel(detail.toString());
 
-    private void kirimPesanan() {
-        if (tfMeja.getText().isEmpty() || tempItems.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Data belum lengkap!");
-            return;
-        }
-        try {
-            int meja = Integer.parseInt(tfMeja.getText());
-            Pesanan p = sys.buatPesananKosong(meja);
-            for (DetailPesanan dp : tempItems)
-                p.tambahItem(dp);
+        JPanel left = new JPanel(new BorderLayout());
+        left.setBackground(Color.WHITE);
+        left.add(lblInfo, BorderLayout.NORTH);
+        left.add(lblDetail, BorderLayout.CENTER);
 
-            // Jika pelayan input, status awal DIPROSES (langsung ke koki)
-            // atau MENUNGGU jika ingin konfirmasi dulu. Sesuai CLI lama: DIPROSES
-            p.setStatus("DIPROSES");
-            sys.saveData();
+        // Tombol Aksi
+        JButton btnAction = new JButton(btnText);
+        btnAction.setBackground(new Color(37, 99, 235));
+        btnAction.setForeground(Color.WHITE);
+        btnAction.setOpaque(true);
+        btnAction.setBorderPainted(false);
 
-            JOptionPane.showMessageDialog(this, "Terkirim ke Dapur!");
-            tempItems.clear();
-            cartModel.clear();
-            tfMeja.setText("");
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Meja harus angka!");
-        }
+        btnAction.addActionListener(e -> {
+            sys.updateStatusPesanan(p.getId(), nextStatus);
+            JOptionPane.showMessageDialog(this, "Status diupdate: " + nextStatus);
+            refreshLists();
+        });
+
+        card.add(left, BorderLayout.CENTER);
+        card.add(btnAction, BorderLayout.EAST);
+        return card;
     }
 
     private JPanel createHeader() {
@@ -245,11 +129,9 @@ public class PelayanGUI extends JFrame {
 
         JLabel lblTitle = new JLabel("Pelayan Dashboard");
         lblTitle.setForeground(Color.WHITE);
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
 
         JButton btnLogout = new JButton("Logout");
-        btnLogout.setBackground(Color.RED);
-        btnLogout.setForeground(Color.WHITE);
         btnLogout.addActionListener(e -> {
             refreshTimer.stop();
             dispose();

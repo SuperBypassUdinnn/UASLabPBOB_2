@@ -41,10 +41,13 @@ public class RestaurantSystem {
     }
     // ==========================================
 
-    public List<MenuItem> getMenuList() { return menu; }
+    public List<MenuItem> getMenuList() {
+        return menu;
+    }
 
     public MenuItem getMenu(int index) {
-        if (index < 0 || index >= menu.size()) return null;
+        if (index < 0 || index >= menu.size())
+            return null;
         return menu.get(index);
     }
 
@@ -66,14 +69,15 @@ public class RestaurantSystem {
                     break;
                 }
             }
-            if (!dipakai) kosong.add(m);
+            if (!dipakai)
+                kosong.add(m);
         }
         return kosong;
     }
 
-    public Pesanan buatPesananKosong(int noMeja) {
+    public Pesanan buatPesananKosong(int noMeja, String namaPelanggan) {
         refreshPesananFromFile();
-        Pesanan p = new Pesanan(idCounter++, new Meja(noMeja));
+        Pesanan p = new Pesanan(idCounter++, new Meja(noMeja), namaPelanggan);
         p.setStatus("MENUNGGU");
         daftarPesanan.add(p);
         saveData();
@@ -88,14 +92,16 @@ public class RestaurantSystem {
     public List<Pesanan> getPesananByMeja(int meja) {
         List<Pesanan> hasil = new ArrayList<>();
         for (Pesanan p : daftarPesanan) {
-            if (p.getMeja().getNomor() == meja) hasil.add(p);
+            if (p.getMeja().getNomor() == meja)
+                hasil.add(p);
         }
         return hasil;
     }
 
     public Pesanan getPesananById(int id) {
         for (Pesanan p : daftarPesanan) {
-            if (p.getId() == id) return p;
+            if (p.getId() == id)
+                return p;
         }
         return null;
     }
@@ -103,7 +109,8 @@ public class RestaurantSystem {
     public boolean updateStatusPesanan(int id, String statusBaru) {
         refreshPesananFromFile();
         Pesanan p = getPesananById(id);
-        if (p == null) return false;
+        if (p == null)
+            return false;
         p.setStatus(statusBaru);
         saveData();
         return true;
@@ -122,12 +129,14 @@ public class RestaurantSystem {
         boolean found = false;
         for (Pesanan p : daftarPesanan) {
             if (p.getStatus().equalsIgnoreCase(status)) {
-                System.out.println("ID:" + p.getId() + " | Meja:" + p.getMeja().getNomor() + " | Total: Rp" + p.getTotal());
+                System.out.println(
+                        "ID:" + p.getId() + " | Meja:" + p.getMeja().getNomor() + " | Total: Rp" + p.getTotal());
                 System.out.println(p.renderDetail());
                 found = true;
             }
         }
-        if (!found) System.out.println("Tidak ada pesanan dengan status: " + status);
+        if (!found)
+            System.out.println("Tidak ada pesanan dengan status: " + status);
     }
 
     public Transaksi buatTransaksi(Pesanan p, Pembayaran pb) {

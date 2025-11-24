@@ -7,20 +7,18 @@ public class Pesanan {
 
     private int id;
     private Meja meja;
-    // Status alur dunia nyata: MENUNGGU -> DIPROSES -> SEDANG DIMASAK -> SIAP DISAJIKAN -> DISAJIKAN -> LUNAS
-    private String status; // MENUNGGU, DIPROSES, SEDANG DIMASAK, SIAP DISAJIKAN, DISAJIKAN, LUNAS
+    private String namaPelanggan; // TAMBAHAN: Untuk filter history
+    private String status;
     private List<DetailPesanan> items;
 
-    public Pesanan(int id, Meja meja) {
+    public Pesanan(int id, Meja meja, String namaPelanggan) {
         this.id = id;
         this.meja = meja;
+        this.namaPelanggan = namaPelanggan;
         this.status = "MENUNGGU";
         this.items = new ArrayList<>();
     }
 
-    // ======================================
-    // GETTER & SETTER
-    // ======================================
     public int getId() {
         return id;
     }
@@ -29,9 +27,9 @@ public class Pesanan {
         return meja;
     }
 
-    public void setMeja(Meja meja) {
-        this.meja = meja;
-    }
+    public String getNamaPelanggan() {
+        return namaPelanggan;
+    } // Getter baru
 
     public String getStatus() {
         return status;
@@ -45,16 +43,10 @@ public class Pesanan {
         return items;
     }
 
-    // ======================================
-    // TAMBAH ITEM
-    // ======================================
     public void tambahItem(DetailPesanan dp) {
         items.add(dp);
     }
 
-    // ======================================
-    // HITUNG TOTAL
-    // ======================================
     public double getTotal() {
         double total = 0;
         for (DetailPesanan d : items) {
@@ -63,25 +55,11 @@ public class Pesanan {
         return total;
     }
 
-    // ======================================
-    // RENDER DETAIL PESANAN (untuk layar & struk)
-    // ======================================
     public String renderDetail() {
         StringBuilder sb = new StringBuilder();
         for (DetailPesanan d : items) {
             sb.append("- ").append(d.toString()).append("\n");
         }
         return sb.toString();
-    }
-
-    // ======================================
-    // TO STRING (UNTUK LIST PELAYAN/KOKI/KASIR)
-    // ======================================
-    @Override
-    public String toString() {
-        return "Pesanan #" + id +
-                " | Meja " + meja.getNomor() +
-                " | Status: " + status +
-                " | Total: Rp" + getTotal();
     }
 }
