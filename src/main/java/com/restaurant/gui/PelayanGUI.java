@@ -12,11 +12,9 @@ import com.restaurant.service.RestaurantSystem;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*; 
-import java.util.List; // Import spesifik untuk List agar aman
 
 public class PelayanGUI extends JFrame {
 
-    private Akun currentAkun;
     private RestaurantSystem sys = RestaurantSystem.getInstance();
     
     private JTextField tfMeja;
@@ -28,7 +26,6 @@ public class PelayanGUI extends JFrame {
     private java.util.List<DetailPesanan> tempItems = new java.util.ArrayList<>();
 
     public PelayanGUI(Akun akun) {
-        this.currentAkun = akun;
         setTitle("Dashboard Pelayan - " + akun.getNama());
         setSize(600, 700); 
         setLocationRelativeTo(null);

@@ -18,7 +18,6 @@ import java.time.format.DateTimeFormatter;
 
 public class KasirGUI extends JFrame {
 
-    private Akun currentAkun;
     private RestaurantSystem sys = RestaurantSystem.getInstance();
     private JPanel listContainer;
     private Timer refreshTimer;
@@ -30,7 +29,6 @@ public class KasirGUI extends JFrame {
     private final Color TEXT_PRIMARY = new Color(15, 23, 42);
 
     public KasirGUI(Akun akun) {
-        this.currentAkun = akun;
         setTitle("Dashboard Kasir - " + akun.getNama());
         setSize(1100, 750);
         setLocationRelativeTo(null);

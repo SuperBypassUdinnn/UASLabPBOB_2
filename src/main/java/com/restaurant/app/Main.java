@@ -8,7 +8,7 @@ import com.restaurant.model.akun.Akun;
 
 public class Main {
 
-    private static AuthService authService = new AuthService();
+    private static AuthService authService = AuthService.getInstance();
     private static Scanner sc = InputUtil.sc;
 
     public static void main(String[] args) {

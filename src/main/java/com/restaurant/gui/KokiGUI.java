@@ -16,7 +16,6 @@ import java.util.Arrays;
 
 public class KokiGUI extends JFrame {
 
-    private Akun currentAkun;
     private JPanel listContainer;
     private RestaurantSystem sys = RestaurantSystem.getInstance();
     private Timer refreshTimer;
@@ -31,7 +30,6 @@ public class KokiGUI extends JFrame {
     private final Color COLOR_SIAP = new Color(34, 197, 94);     // Hijau
 
     public KokiGUI(Akun akun) {
-        this.currentAkun = akun;
         setTitle("Dapur Restaurant - Chef " + akun.getNama());
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(1100, 750);
