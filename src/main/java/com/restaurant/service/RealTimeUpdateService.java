@@ -1,9 +1,8 @@
 package com.restaurant.service;
 
+import com.restaurant.model.pesanan.Pesanan;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.restaurant.model.pesanan.Pesanan;
 
 /**
  * Service untuk real-time update pesanan antar role
@@ -13,7 +12,7 @@ public class RealTimeUpdateService {
 
     private static final RealTimeUpdateService instance = new RealTimeUpdateService();
 
-    private Map<String, Set<Integer>> lastPesananIds = new ConcurrentHashMap<>();
+    private final Map<String, Set<Integer>> lastPesananIds = new ConcurrentHashMap<>();
 
     private RealTimeUpdateService() {
     }
@@ -28,27 +27,18 @@ public class RealTimeUpdateService {
     private boolean isPesananRelevantForRole(Pesanan pesanan, String role) {
         String status = pesanan.getStatus();
 
-        switch (role.toLowerCase()) {
-            case "pelayan":
-                // Pelayan tertarik pada: MENUNGGU, SIAP DISAJIKAN, LUNAS
-                return status.equals("MENUNGGU") ||
-                        status.equals("SIAP DISAJIKAN") ||
-                        status.equals("LUNAS");
-            case "koki":
-                // Koki tertarik pada: DIPROSES, SEDANG DIMASAK, SIAP DISAJIKAN
-                return status.equals("DIPROSES") ||
-                        status.equals("SEDANG DIMASAK") ||
-                        status.equals("SIAP DISAJIKAN");
-            case "kasir":
-                // Kasir tertarik pada: DISAJIKAN, LUNAS
-                return status.equals("DISAJIKAN") ||
-                        status.equals("LUNAS");
-            case "customer":
-                // Customer tertarik pada semua status pesanannya
-                return true; // Customer akan filter berdasarkan meja di level aplikasi
-            default:
-                return false;
-        }
+        return switch (role.toLowerCase()) {
+            case "pelayan" -> status.equals("MENUNGGU") ||
+                              status.equals("SIAP DISAJIKAN") ||
+                              status.equals("LUNAS");
+            case "koki" -> status.equals("DIPROSES") ||
+                           status.equals("SEDANG DIMASAK") ||
+                           status.equals("SIAP DISAJIKAN");
+            case "kasir" -> status.equals("DISAJIKAN") ||
+                            status.equals("LUNAS");
+            case "customer" -> true; // Customer akan filter berdasarkan meja di level aplikasi
+            default -> false;
+        };
     }
 
     /**
@@ -101,25 +91,25 @@ public class RealTimeUpdateService {
         StringBuilder sb = new StringBuilder();
 
         switch (status) {
-            case "MENUNGGU":
+            case "MENUNGGU" -> {
                 if (role.equals("pelayan")) {
                     sb.append("🔔 Pesanan baru #").append(pesanan.getId())
                             .append(" dari Meja ").append(pesanan.getMeja().getNomor());
                 }
-                break;
-            case "DIPROSES":
+            }
+            case "DIPROSES" -> {
                 if (role.equals("koki")) {
                     sb.append("🆕 Pesanan #").append(pesanan.getId())
                             .append(" masuk dapur, Meja ").append(pesanan.getMeja().getNomor());
                 }
-                break;
-            case "SEDANG DIMASAK":
+            }
+            case "SEDANG DIMASAK" -> {
                 if (role.equals("koki")) {
                     sb.append("👨‍🍳 Pesanan #").append(pesanan.getId())
                             .append(" sedang dimasak");
                 }
-                break;
-            case "SIAP DISAJIKAN":
+            }
+            case "SIAP DISAJIKAN" -> {
                 if (role.equals("pelayan")) {
                     sb.append("🍽️ Pesanan #").append(pesanan.getId())
                             .append(" siap disajikan ke Meja ").append(pesanan.getMeja().getNomor());
@@ -128,8 +118,8 @@ public class RealTimeUpdateService {
                     sb.append("✅ Pesanan #").append(pesanan.getId())
                             .append(" selesai dimasak, menunggu disajikan");
                 }
-                break;
-            case "DISAJIKAN":
+            }
+            case "DISAJIKAN" -> {
                 if (role.equals("kasir")) {
                     sb.append("💰 Pesanan #").append(pesanan.getId())
                             .append(" sudah disajikan, Meja ").append(pesanan.getMeja().getNomor())
@@ -139,8 +129,8 @@ public class RealTimeUpdateService {
                     sb.append("✅ Pesanan #").append(pesanan.getId())
                             .append(" sudah disajikan, selamat menikmati!");
                 }
-                break;
-            case "LUNAS":
+            }
+            case "LUNAS" -> {
                 if (role.equals("pelayan")) {
                     sb.append("✅ Pesanan #").append(pesanan.getId())
                             .append(" telah dibayar, Meja ").append(pesanan.getMeja().getNomor())
@@ -150,7 +140,10 @@ public class RealTimeUpdateService {
                     sb.append("✅ Pesanan #").append(pesanan.getId())
                             .append(" telah lunas. Terima kasih!");
                 }
-                break;
+            }
+            default -> {
+                // no-op
+            }
         }
 
         return sb.length() > 0 ? sb.toString() : null;

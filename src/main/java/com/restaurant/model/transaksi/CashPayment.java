@@ -2,7 +2,7 @@ package com.restaurant.model.transaksi;
 
 public class CashPayment implements Pembayaran {
 
-    private double jumlahUang;
+    private final double jumlahUang;
 
     public CashPayment(double jumlahUang) {
         this.jumlahUang = jumlahUang;

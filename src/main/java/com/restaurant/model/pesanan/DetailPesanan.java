@@ -4,7 +4,7 @@ import com.restaurant.model.menu.MenuItem;
 
 public class DetailPesanan {
 
-    private MenuItem menu;
+    private final MenuItem menu;
     private int jumlah;
     // Catatan dihapus dari sini, pindah ke class Pesanan
 

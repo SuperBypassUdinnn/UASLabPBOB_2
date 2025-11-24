@@ -5,12 +5,12 @@ import java.util.List;
 
 public class Pesanan {
 
-    private int id;
-    private Meja meja;
-    private String namaPelanggan;
+    private final int id;
+    private final Meja meja;
+    private final String namaPelanggan;
+    private final List<DetailPesanan> items;
     private String status;
     private String catatan; // PINDAHAN: Catatan global per pesanan
-    private List<DetailPesanan> items;
 
     public Pesanan(int id, Meja meja, String namaPelanggan) {
         this.id = id;

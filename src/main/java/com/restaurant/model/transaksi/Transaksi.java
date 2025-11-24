@@ -1,16 +1,15 @@
 package com.restaurant.model.transaksi;
 
+import com.restaurant.model.pesanan.Pesanan;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import com.restaurant.model.pesanan.Pesanan;
-
 public class Transaksi {
 
-    private Pesanan pesanan;
-    private Pembayaran pembayaran;
-    private double total;
-    private LocalDateTime waktu;
+    private final Pesanan pesanan;
+    private final Pembayaran pembayaran;
+    private final double total;
+    private final LocalDateTime waktu;
 
     public Transaksi(Pesanan pesanan, Pembayaran pembayaran) {
         this.pesanan = pesanan;
