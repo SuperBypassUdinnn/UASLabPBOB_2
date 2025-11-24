@@ -7,6 +7,30 @@
       "password": "Udin123@",
       "email": "fadlon@gmail.com",
       "role": "customer"
+    },
+    {
+      "id": "P01",
+      "nama": "Makhluk Gaib",
+      "username": "udinpelayan",
+      "password": "@Udin123",
+      "email": "alaudin@rasaaceh.id",
+      "role": "Pelayan"
+    },
+    {
+      "id": "P02",
+      "nama": "Mas Anis",
+      "username": "masanismasanis",
+      "password": "@Masanis123",
+      "email": "masanins@rasaaceh.id",
+      "role": "Koki"
+    },
+    {
+      "id": "P03",
+      "nama": "Zel",
+      "username": "zelda123",
+      "password": "@Zelda123",
+      "email": "zelda@rasaaceh.id",
+      "role": "Kasir"
     }
   ]
 }
