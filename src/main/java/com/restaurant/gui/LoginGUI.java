@@ -174,6 +174,12 @@ public class LoginGUI extends JFrame {
                 case 0 -> {
                     JOptionPane.showMessageDialog(this, "Registrasi Berhasil.", "SUKSES",
                             JOptionPane.INFORMATION_MESSAGE);
+                    // mengosongkan form
+                    tfNama.setText("");
+                    tfUser.setText("");
+                    tfEmail.setText("");
+                    pfPass.setText("");
+
                     cardLayout.show(cardContainer, "LOGIN");
                 }
                 case 1 -> {
