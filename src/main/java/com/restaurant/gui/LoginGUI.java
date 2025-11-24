@@ -4,8 +4,6 @@ import com.restaurant.model.akun.Akun;
 import com.restaurant.service.AuthService;
 import java.awt.*;
 import java.awt.event.ItemEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import javax.swing.*;
 import javax.swing.border.*;
 
@@ -13,20 +11,13 @@ public class LoginGUI extends JFrame {
 
     private CardLayout cardLayout;
     private JPanel cardContainer;
-    private AuthService auth = AuthService.getInstance(); // Pastikan AuthService punya method getInstance()
+    private AuthService auth = AuthService.getInstance();
 
-    // Palet Warna
+    // Warna & Font
     private final Color BG_COLOR = new Color(241, 243, 245);
     private final Color CARD_COLOR = Color.WHITE;
-    private final Color TEXT_PRIMARY = new Color(33, 37, 41);
-    private final Color TEXT_SECONDARY = new Color(108, 117, 125);
     private final Color BLUE_BUTTON = new Color(59, 130, 246);
-    private final Color BORDER_COLOR = new Color(229, 231, 235);
-
-    // Fonts
     private final Font TITLE_FONT = new Font("SansSerif", Font.BOLD, 24);
-    private final Font LABEL_FONT = new Font("SansSerif", Font.BOLD, 13);
-    private final Font INPUT_FONT = new Font("SansSerif", Font.PLAIN, 14);
 
     public LoginGUI() {
         setTitle("Restaurant System");
@@ -42,7 +33,7 @@ public class LoginGUI extends JFrame {
         cardContainer = new JPanel(cardLayout);
         cardContainer.setBackground(CARD_COLOR);
         cardContainer.setBorder(new CompoundBorder(
-                new LineBorder(BORDER_COLOR, 1),
+                new LineBorder(new Color(229, 231, 235), 1),
                 new EmptyBorder(40, 50, 40, 50)));
 
         cardContainer.add(createLoginPanel(), "LOGIN");
@@ -52,13 +43,12 @@ public class LoginGUI extends JFrame {
         cardLayout.show(cardContainer, "LOGIN");
     }
 
-    // Panel Login
     private JPanel createLoginPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(CARD_COLOR);
         GridBagConstraints gbc = createGbc();
 
-        addTitle(panel, "Restaurant System", "Login", gbc);
+        addTitle(panel, "Restaurant System", "Silakan Login", gbc);
 
         addLabel(panel, "Username", gbc);
         JTextField tfUser = createTextField();
@@ -68,49 +58,35 @@ public class LoginGUI extends JFrame {
         addLabel(panel, "Password", gbc);
         JPasswordField pfPass = createPasswordField();
         panel.add(pfPass, gbc);
-        addSpacer(gbc, 15);
-
-        addLabel(panel, "Login Sebagai", gbc);
-        String[] loginRoles = { "Kasir", "Koki", "Pelayan", "Customer" };
-        JComboBox<String> cbRole = createComboBox(loginRoles);
-        panel.add(cbRole, gbc);
         addSpacer(gbc, 25);
+
+        // HAPUS: Dropdown Role Login
 
         JButton btnLogin = createBlueButton("Login");
         btnLogin.addActionListener(e -> {
             String user = tfUser.getText().trim();
             String pass = new String(pfPass.getPassword());
-            String role = (String) cbRole.getSelectedItem();
 
-            // PERBAIKAN: Menggunakan auth.login(), lalu cek Role manual
+            // LOGIC BARU: Auto Detect Role
             Akun a = auth.login(user, pass);
 
             if (a != null) {
-                // Cek apakah Role yang dipilih sesuai dengan Role di akun
-                if (a.getRole().equalsIgnoreCase(role)) {
-                    JOptionPane.showMessageDialog(this, "Login Berhasil sebagai " + role);
-                    dispose();
+                String role = a.getRole();
+                JOptionPane.showMessageDialog(this, "Login Berhasil sebagai " + role);
+                dispose();
 
-                    // Routing ke GUI masing-masing
-                    SwingUtilities.invokeLater(() -> {
-                        if (role.equalsIgnoreCase("Kasir")) {
-                            new KasirGUI(a).setVisible(true);
-                        } else if (role.equalsIgnoreCase("Koki")) {
-                            new KokiGUI(a).setVisible(true);
-                        } else if (role.equalsIgnoreCase("Pelayan")) {
-                            new PelayanGUI(a).setVisible(true);
-                        } else if (role.equalsIgnoreCase("Customer")) {
-                            // INTEGRASI: Membuka CustomerGUI
-                            new CustomerGUI(a).setVisible(true);
-                        }
-                    });
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "Login Gagal! Role salah (Akun ini terdaftar sebagai " + a.getRole() + ")", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
+                SwingUtilities.invokeLater(() -> {
+                    if (role.equalsIgnoreCase("kasir"))
+                        new KasirGUI(a).setVisible(true);
+                    else if (role.equalsIgnoreCase("koki"))
+                        new KokiGUI(a).setVisible(true);
+                    else if (role.equalsIgnoreCase("pelayan"))
+                        new PelayanGUI(a).setVisible(true);
+                    else if (role.equalsIgnoreCase("customer"))
+                        new CustomerGUI(a).setVisible(true);
+                });
             } else {
-                JOptionPane.showMessageDialog(this, "Login Gagal! Username atau Password salah.", "Error",
+                JOptionPane.showMessageDialog(this, "Username atau Password salah!", "Login Gagal",
                         JOptionPane.ERROR_MESSAGE);
             }
         });
@@ -122,48 +98,49 @@ public class LoginGUI extends JFrame {
         return panel;
     }
 
-    // PANEL REGISTER
     private JPanel createRegisterPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(CARD_COLOR);
         GridBagConstraints gbc = createGbc();
 
-        addTitle(panel, "Daftar Akun Baru", "Isi data pegawai atau customer", gbc);
+        addTitle(panel, "Daftar Akun Baru", "Isi data lengkap", gbc);
+
+        addLabel(panel, "Nama Lengkap", gbc);
+        JTextField tfNama = createTextField();
+        panel.add(tfNama, gbc);
+        addSpacer(gbc, 10);
 
         addLabel(panel, "Username", gbc);
         JTextField tfUser = createTextField();
         panel.add(tfUser, gbc);
-        addSpacer(gbc, 15);
+        addSpacer(gbc, 10);
+
+        // TAMBAH: Input Email
+        addLabel(panel, "Email", gbc);
+        JTextField tfEmail = createTextField();
+        panel.add(tfEmail, gbc);
+        addSpacer(gbc, 10);
 
         addLabel(panel, "Password", gbc);
         JPasswordField pfPass = createPasswordField();
         panel.add(pfPass, gbc);
-        addSpacer(gbc, 15);
+        addSpacer(gbc, 10);
 
-        // --- Tipe Akun ---
         addLabel(panel, "Tipe Akun", gbc);
-        String[] tipeAkun = { "Pegawai", "Customer" };
+        String[] tipeAkun = { "Customer", "Pegawai" };
         JComboBox<String> cbTipe = createComboBox(tipeAkun);
         panel.add(cbTipe, gbc);
-        addSpacer(gbc, 15);
-
-        // --- Role Pegawai ---
-        JLabel lblRole = new JLabel("Role Pegawai");
-        lblRole.setFont(LABEL_FONT);
-        lblRole.setForeground(TEXT_PRIMARY);
-
-        String[] roles = { "Kasir", "Koki", "Pelayan" };
-        JComboBox<String> cbRole = createComboBox(roles);
+        addSpacer(gbc, 10);
 
         JPanel rolePanel = new JPanel(new BorderLayout());
         rolePanel.setBackground(CARD_COLOR);
-        rolePanel.add(lblRole, BorderLayout.NORTH);
+        rolePanel.add(new JLabel("Role Pegawai"), BorderLayout.NORTH);
+        String[] roles = { "Kasir", "Koki", "Pelayan" };
+        JComboBox<String> cbRole = createComboBox(roles);
         rolePanel.add(cbRole, BorderLayout.CENTER);
-        rolePanel.setBorder(new EmptyBorder(0, 0, 15, 0));
-
+        rolePanel.setVisible(false); // Default hidden
         panel.add(rolePanel, gbc);
 
-        // Logic Hide/Show Role
         cbTipe.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 boolean isPegawai = "Pegawai".equals(cbTipe.getSelectedItem());
@@ -174,50 +151,45 @@ public class LoginGUI extends JFrame {
 
         JButton btnDaftar = createBlueButton("Daftar");
         btnDaftar.addActionListener(e -> {
-            String user = tfUser.getText().trim();
+            String nama = tfNama.getText();
+            String user = tfUser.getText();
             String pass = new String(pfPass.getPassword());
+            String email = tfEmail.getText();
             String tipe = (String) cbTipe.getSelectedItem();
 
-            if (user.isEmpty() || pass.isEmpty()) {
+            if (user.isEmpty() || pass.isEmpty() || email.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Harap isi semua kolom.", "Peringatan",
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
             boolean success = false;
-
-            // PERBAIKAN: Memilah registerCustomer atau registerPegawai
             if ("Customer".equals(tipe)) {
-                // Untuk customer, nama disamakan dengan username, email dikosongkan
-                success = auth.registerCustomer(user, user, pass, "");
+                success = auth.registerCustomer(nama, user, pass, email);
             } else {
-                // Untuk pegawai
-                String finalRole = (String) cbRole.getSelectedItem();
-                // Generate Email Dummy agar lolos validasi AuthService (harus @usk.ac.id)
-                String dummyEmail = user.replaceAll("\\s+", "").toLowerCase() + "@usk.ac.id";
-
-                success = auth.registerPegawai(user, user, pass, dummyEmail, finalRole);
+                String role = (String) cbRole.getSelectedItem();
+                success = auth.registerPegawai(nama, user, pass, email, role);
+                if (!success) {
+                    JOptionPane.showMessageDialog(this, "Gagal! Email pegawai harus domain @rasaaceh.id", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
             }
 
             if (success) {
-                JOptionPane.showMessageDialog(this, "Registrasi Berhasil! Silakan Login.", "Sukses",
-                        JOptionPane.INFORMATION_MESSAGE);
-                tfUser.setText("");
-                pfPass.setText("");
+                JOptionPane.showMessageDialog(this, "Registrasi Berhasil!", "Sukses", JOptionPane.INFORMATION_MESSAGE);
                 cardLayout.show(cardContainer, "LOGIN");
             } else {
-                JOptionPane.showMessageDialog(this,
-                        "Registrasi Gagal (Username sudah ada atau Email Pegawai tidak valid).", "Gagal",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Username sudah digunakan.", "Gagal", JOptionPane.ERROR_MESSAGE);
             }
         });
         panel.add(btnDaftar, gbc);
-
         addFooterLink(panel, "Sudah punya akun? ", "Login di sini", gbc, () -> cardLayout.show(cardContainer, "LOGIN"));
 
         return panel;
     }
 
+    // Helper UI Methods
     private GridBagConstraints createGbc() {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -234,93 +206,64 @@ public class LoginGUI extends JFrame {
     private void addTitle(JPanel p, String t, String s, GridBagConstraints gbc) {
         JLabel lt = new JLabel(t, SwingConstants.CENTER);
         lt.setFont(TITLE_FONT);
-        lt.setForeground(TEXT_PRIMARY);
         JLabel ls = new JLabel(s, SwingConstants.CENTER);
-        ls.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        ls.setForeground(TEXT_SECONDARY);
+        ls.setForeground(Color.GRAY);
         gbc.insets = new Insets(0, 0, 5, 0);
         p.add(lt, gbc);
-        gbc.insets = new Insets(0, 0, 30, 0);
+        gbc.insets = new Insets(0, 0, 20, 0);
         p.add(ls, gbc);
         gbc.insets = new Insets(0, 0, 0, 0);
     }
 
     private void addLabel(JPanel p, String t, GridBagConstraints gbc) {
         JLabel l = new JLabel(t);
-        l.setFont(LABEL_FONT);
-        l.setForeground(TEXT_PRIMARY);
-        gbc.insets = new Insets(0, 0, 8, 0);
+        l.setFont(new Font("SansSerif", Font.BOLD, 12));
+        gbc.insets = new Insets(0, 0, 5, 0);
         p.add(l, gbc);
         gbc.insets = new Insets(0, 0, 0, 0);
     }
 
     private JTextField createTextField() {
-        JTextField t = new JTextField(20);
-        styleInput(t);
-        return t;
+        return (JTextField) styleInput(new JTextField(20));
     }
 
     private JPasswordField createPasswordField() {
-        JPasswordField p = new JPasswordField(20);
-        styleInput(p);
-        return p;
+        return (JPasswordField) styleInput(new JPasswordField(20));
+    }
+
+    private JComponent styleInput(JTextField t) {
+        t.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        t.setBorder(new CompoundBorder(new LineBorder(new Color(229, 231, 235), 1), new EmptyBorder(8, 10, 8, 10)));
+        return t;
     }
 
     private JComboBox<String> createComboBox(String[] i) {
         JComboBox<String> c = new JComboBox<>(i);
-        c.setFont(INPUT_FONT);
         c.setBackground(Color.WHITE);
-        c.setBorder(new CompoundBorder(new LineBorder(BORDER_COLOR, 1), new EmptyBorder(5, 5, 5, 5)));
         return c;
     }
 
-    private void styleInput(JTextField t) {
-        t.setFont(INPUT_FONT);
-        t.setBorder(new CompoundBorder(new LineBorder(BORDER_COLOR, 1), new EmptyBorder(10, 12, 10, 12)));
-    }
-
     private JButton createBlueButton(String t) {
-        JButton b = new JButton(t) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getModel().isArmed() ? BLUE_BUTTON.darker() : BLUE_BUTTON);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        b.setFont(new Font("SansSerif", Font.BOLD, 15));
+        JButton b = new JButton(t);
+        b.setBackground(BLUE_BUTTON);
         b.setForeground(Color.WHITE);
+        b.setFont(new Font("SansSerif", Font.BOLD, 14));
         b.setFocusPainted(false);
         b.setBorderPainted(false);
-        b.setContentAreaFilled(false);
-        b.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        b.setPreferredSize(new Dimension(100, 45));
+        b.setPreferredSize(new Dimension(100, 40));
         return b;
     }
 
     private void addFooterLink(JPanel p, String pr, String lt, GridBagConstraints gbc, Runnable act) {
         JLabel l = new JLabel("<html>" + pr + "<span style='color:#3b82f6;'><u>" + lt + "</u></span></html>",
                 SwingConstants.CENTER);
-        l.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        l.setForeground(TEXT_SECONDARY);
         l.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        l.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
+        l.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
                 act.run();
             }
         });
-        gbc.insets = new Insets(20, 0, 0, 0);
+        gbc.insets = new Insets(15, 0, 0, 0);
         p.add(l, gbc);
-    }
-
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {
-        }
-        SwingUtilities.invokeLater(() -> new LoginGUI().setVisible(true));
     }
 }

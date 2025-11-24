@@ -7,8 +7,9 @@ public class Pesanan {
 
     private int id;
     private Meja meja;
-    private String namaPelanggan; // TAMBAHAN: Untuk filter history
+    private String namaPelanggan;
     private String status;
+    private String catatan; // PINDAHAN: Catatan global per pesanan
     private List<DetailPesanan> items;
 
     public Pesanan(int id, Meja meja, String namaPelanggan) {
@@ -16,6 +17,7 @@ public class Pesanan {
         this.meja = meja;
         this.namaPelanggan = namaPelanggan;
         this.status = "MENUNGGU";
+        this.catatan = "-";
         this.items = new ArrayList<>();
     }
 
@@ -29,7 +31,7 @@ public class Pesanan {
 
     public String getNamaPelanggan() {
         return namaPelanggan;
-    } // Getter baru
+    }
 
     public String getStatus() {
         return status;
@@ -37,6 +39,14 @@ public class Pesanan {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getCatatan() {
+        return catatan;
+    }
+
+    public void setCatatan(String catatan) {
+        this.catatan = catatan;
     }
 
     public List<DetailPesanan> getItems() {
@@ -57,6 +67,9 @@ public class Pesanan {
 
     public String renderDetail() {
         StringBuilder sb = new StringBuilder();
+        if (catatan != null && !catatan.isEmpty() && !catatan.equals("-")) {
+            sb.append("Note: ").append(catatan).append("\n");
+        }
         for (DetailPesanan d : items) {
             sb.append("- ").append(d.toString()).append("\n");
         }

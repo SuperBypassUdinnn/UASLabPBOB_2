@@ -19,17 +19,15 @@ public class FileStorageService {
         new File(BASE_DIR).mkdirs();
     }
 
-    // --- LOAD MENU ---
     public static List<MenuItem> loadMenu() {
+        // ... (Kode load menu sama seperti sebelumnya) ...
         List<MenuItem> hasil = new ArrayList<>();
         String json = JsonUtil.readFile(MENU_FILE);
         List<String> list = JsonUtil.parseArray(json, "menu");
-
         for (String obj : list) {
             String jenis = JsonUtil.getString(obj, "jenis");
             String nama = JsonUtil.getString(obj, "nama");
             double harga = JsonUtil.getDouble(obj, "harga");
-
             if ("makanan".equalsIgnoreCase(jenis)) {
                 hasil.add(new Makanan(nama, harga, JsonUtil.getString(obj, "kategori"),
                         JsonUtil.getString(obj, "tingkat_pedas")));
@@ -37,17 +35,14 @@ public class FileStorageService {
                 hasil.add(new Minuman(nama, harga, JsonUtil.getString(obj, "ukuran"), JsonUtil.getString(obj, "suhu")));
             }
         }
-
-        // Data dummy jika kosong
-        if (hasil.isEmpty()) {
+        if (hasil.isEmpty()) { // Dummy
             hasil.add(new Makanan("Mie Aceh Spesial", 25000, "Main Course", "Pedas"));
-            hasil.add(new Makanan("Mie Aceh Kepiting", 45000, "Main Course", "Pedas"));
             hasil.add(new Minuman("Teh Tarik", 12000, "Medium", "Panas"));
         }
         return hasil;
     }
 
-    // --- LOAD PESANAN ---
+    // --- LOAD PESANAN UPDATE ---
     public static List<Pesanan> loadPesanan() {
         List<Pesanan> list = new ArrayList<>();
         String json = JsonUtil.readFile(PESANAN_FILE);
@@ -57,28 +52,26 @@ public class FileStorageService {
             int id = JsonUtil.getInt(pObj, "id");
             int meja = JsonUtil.getInt(pObj, "meja");
             String status = JsonUtil.getString(pObj, "status");
-            String namaPelanggan = JsonUtil.getString(pObj, "pelanggan"); // Load pelanggan
+            String pelanggan = JsonUtil.getString(pObj, "pelanggan");
+            String catatan = JsonUtil.getString(pObj, "catatan"); // Load Global Note
 
-            if (namaPelanggan == null || namaPelanggan.isEmpty())
-                namaPelanggan = "Guest";
+            if (pelanggan == null || pelanggan.isEmpty())
+                pelanggan = "Guest";
 
-            if (status.isEmpty())
-                continue;
-
-            Pesanan p = new Pesanan(id, new Meja(meja), namaPelanggan);
+            Pesanan p = new Pesanan(id, new Meja(meja), pelanggan);
             p.setStatus(status);
+            p.setCatatan(catatan); // Set Global Note
 
             List<String> itemObjs = JsonUtil.parseArray(pObj, "items");
             for (String iObj : itemObjs) {
                 String namaMenu = JsonUtil.getString(iObj, "nama");
                 int jumlah = JsonUtil.getInt(iObj, "jumlah");
-                String catatan = JsonUtil.getString(iObj, "catatan");
 
                 MenuItem mi = findMenuByName(namaMenu);
                 if (mi != null) {
-                    p.tambahItem(new DetailPesanan(mi, jumlah, catatan));
+                    p.tambahItem(new DetailPesanan(mi, jumlah));
                 } else {
-                    p.tambahItem(new DetailPesanan(new Makanan(namaMenu, 0, "-", "-"), jumlah, catatan));
+                    p.tambahItem(new DetailPesanan(new Makanan(namaMenu, 0, "-", "-"), jumlah));
                 }
             }
             list.add(p);
@@ -86,7 +79,7 @@ public class FileStorageService {
         return list;
     }
 
-    // --- SAVE PESANAN ---
+    // --- SAVE PESANAN UPDATE ---
     public static void savePesanan(List<Pesanan> list, int nextId) {
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
@@ -98,9 +91,9 @@ public class FileStorageService {
             sb.append("    {\n");
             sb.append("      \"id\": ").append(p.getId()).append(",\n");
             sb.append("      \"meja\": ").append(p.getMeja().getNomor()).append(",\n");
-            sb.append("      \"pelanggan\": \"").append(JsonUtil.escape(p.getNamaPelanggan())).append("\",\n"); // Save
-                                                                                                                // pelanggan
+            sb.append("      \"pelanggan\": \"").append(JsonUtil.escape(p.getNamaPelanggan())).append("\",\n");
             sb.append("      \"status\": \"").append(p.getStatus()).append("\",\n");
+            sb.append("      \"catatan\": \"").append(JsonUtil.escape(p.getCatatan())).append("\",\n"); // Save Note
             sb.append("      \"items\": [");
 
             List<DetailPesanan> items = p.getItems();
@@ -110,8 +103,8 @@ public class FileStorageService {
                     sb.append(", ");
                 sb.append("{");
                 sb.append("\"nama\": \"").append(JsonUtil.escape(d.getMenu().getNama())).append("\", ");
-                sb.append("\"jumlah\": ").append(d.getJumlah()).append(", ");
-                sb.append("\"catatan\": \"").append(JsonUtil.escape(d.getCatatan())).append("\"");
+                sb.append("\"jumlah\": ").append(d.getJumlah());
+                // Tidak ada lagi field catatan per item
                 sb.append("}");
             }
             sb.append("]\n");
@@ -131,11 +124,11 @@ public class FileStorageService {
     }
 
     public static void saveTransaksi(Transaksi t) {
+        // ... (Sama seperti kode sebelumnya)
         List<String> list = new ArrayList<>();
         String json = JsonUtil.readFile(TRANSAKSI_FILE);
         if (!json.equals("{}"))
             list = JsonUtil.parseArray(json, "transaksi");
-
         String obj = JsonUtil.jsonObject(
                 "idPesanan", String.valueOf(t.getPesanan().getId()),
                 "total", String.valueOf(t.getTotal()),

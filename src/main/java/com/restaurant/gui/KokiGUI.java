@@ -21,13 +21,13 @@ public class KokiGUI extends JFrame {
     private Timer refreshTimer;
 
     // --- WARNA ---
-    private final Color THEME_BLUE = new Color(59, 130, 246); 
+    private final Color THEME_BLUE = new Color(59, 130, 246);
     private final Color BG_COLOR = new Color(248, 250, 252);
-    
+
     // Status Colors
     private final Color COLOR_DIPROSES = new Color(234, 179, 8); // Kuning
     private final Color COLOR_DIMASAK = new Color(59, 130, 246); // Biru
-    private final Color COLOR_SIAP = new Color(34, 197, 94);     // Hijau
+    private final Color COLOR_SIAP = new Color(34, 197, 94); // Hijau
 
     public KokiGUI(Akun akun) {
         setTitle("Dapur Restaurant - Chef " + akun.getNama());
@@ -50,12 +50,12 @@ public class KokiGUI extends JFrame {
         listContainer = new JPanel();
         listContainer.setLayout(new BoxLayout(listContainer, BoxLayout.Y_AXIS));
         listContainer.setBackground(BG_COLOR);
-        
+
         JScrollPane scrollPane = new JScrollPane(listContainer);
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(BG_COLOR);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        
+
         contentPanel.add(scrollPane, BorderLayout.CENTER);
         mainPanel.add(contentPanel, BorderLayout.CENTER);
 
@@ -71,13 +71,12 @@ public class KokiGUI extends JFrame {
 
         // 1. FILTER: Hanya ambil status aktif dapur
         List<String> visibleStatuses = Arrays.asList(
-            "MENUNGGU", "DIPROSES", "SEDANG DIMASAK", "SIAP DISAJIKAN"
-        );
-        
+                "MENUNGGU", "DIPROSES", "SEDANG DIMASAK", "SIAP DISAJIKAN");
+
         List<Pesanan> filtered = new ArrayList<>();
-        if(allOrders != null) {
-            for(Pesanan p : allOrders) {
-                if(visibleStatuses.contains(p.getStatus().toUpperCase())) {
+        if (allOrders != null) {
+            for (Pesanan p : allOrders) {
+                if (visibleStatuses.contains(p.getStatus().toUpperCase())) {
                     filtered.add(p);
                 }
             }
@@ -93,7 +92,7 @@ public class KokiGUI extends JFrame {
         } else {
             // 2. GROUPING: Satukan berdasarkan Nomor Meja
             Map<Integer, List<Pesanan>> groupedByTable = filtered.stream()
-                .collect(Collectors.groupingBy(p -> p.getMeja().getNomor()));
+                    .collect(Collectors.groupingBy(p -> p.getMeja().getNomor()));
 
             // Sort by nomor meja
             List<Integer> sortedTables = new ArrayList<>(groupedByTable.keySet());
@@ -101,16 +100,16 @@ public class KokiGUI extends JFrame {
 
             for (Integer mejaNum : sortedTables) {
                 List<Pesanan> pesananMeja = groupedByTable.get(mejaNum);
-                
+
                 JPanel wrapper = new JPanel(new BorderLayout());
                 wrapper.setBackground(BG_COLOR);
                 wrapper.add(createGroupCard(mejaNum, pesananMeja), BorderLayout.NORTH);
-                
+
                 listContainer.add(wrapper);
                 listContainer.add(Box.createVerticalStrut(15));
             }
         }
-        
+
         listContainer.add(Box.createVerticalGlue());
         listContainer.revalidate();
         listContainer.repaint();
@@ -121,91 +120,98 @@ public class KokiGUI extends JFrame {
         JPanel card = new JPanel(new GridBagLayout());
         card.setBackground(Color.WHITE);
         card.setBorder(new CompoundBorder(
-            new LineBorder(new Color(230, 230, 230), 1),
-            new EmptyBorder(15, 15, 15, 15)
-        ));
-        
+                new LineBorder(new Color(230, 230, 230), 1),
+                new EmptyBorder(15, 15, 15, 15)));
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.insets = new Insets(0, 5, 0, 5);
 
         // --- 1. INFO MEJA ---
-        gbc.gridx = 0; gbc.weightx = 0.25;
+        gbc.gridx = 0;
+        gbc.weightx = 0.25;
         JPanel infoPanel = new JPanel(new GridLayout(2, 1));
         infoPanel.setOpaque(false);
-        
+
         JLabel lblMeja = new JLabel("Meja " + mejaNum);
         lblMeja.setFont(new Font("Segoe UI", Font.BOLD, 22));
         lblMeja.setForeground(new Color(15, 23, 42));
-        
+
         String ids = orders.stream().map(p -> "#" + p.getId()).collect(Collectors.joining(", "));
         JLabel lblId = new JLabel("<html><div style='width:100px;'>" + ids + "</div></html>");
         lblId.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         lblId.setForeground(Color.GRAY);
-        
+
         infoPanel.add(lblMeja);
         infoPanel.add(lblId);
         card.add(infoPanel, gbc);
 
         // --- 2. DETAIL MENU (GABUNGAN SEMUA PESANAN) ---
-        gbc.gridx = 1; gbc.weightx = 0.50;
-        
+        gbc.gridx = 1;
+        gbc.weightx = 0.50;
+
         StringBuilder sb = new StringBuilder("<html><body style='font-family: Segoe UI;'>");
-        for(Pesanan p : orders) {
+        for (Pesanan p : orders) {
             for (DetailPesanan dp : p.getItems()) {
                 sb.append("<div style='margin-bottom: 4px;'>");
                 sb.append("<b>").append(dp.getMenu().getNama()).append("</b>");
                 sb.append(" <span style='color:gray'>x").append(dp.getJumlah()).append("</span>");
-                
-                if (dp.getCatatan() != null && !dp.getCatatan().isEmpty()) {
-                    sb.append("<br><span style='color:rgb(220,38,38); font-size:11px;'><i>*")
-                      .append(dp.getCatatan()).append("</i></span>");
-                }
+
                 sb.append("</div>");
+            }
+            if (p.getCatatan() != null && !p.getCatatan().isEmpty()) {
+                sb.append("<br><span style='color:rgb(220,38,38); font-size:11px;'><i>*")
+                        .append(p.getCatatan()).append("</i></span>");
             }
         }
         sb.append("</body></html>");
-        
+
         JLabel lblMenu = new JLabel(sb.toString());
         lblMenu.setVerticalAlignment(SwingConstants.TOP);
         card.add(lblMenu, gbc);
 
         // --- 3. STATUS DROPDOWN (BATCH UPDATE) ---
-        gbc.gridx = 2; gbc.weightx = 0.25;
-        
-        String[] options = {"DIPROSES", "SEDANG DIMASAK", "SIAP DISAJIKAN"};
+        gbc.gridx = 2;
+        gbc.weightx = 0.25;
+
+        String[] options = { "DIPROSES", "SEDANG DIMASAK", "SIAP DISAJIKAN" };
         JComboBox<String> cbStatus = new JComboBox<>(options);
         cbStatus.setFont(new Font("Segoe UI", Font.BOLD, 12));
         cbStatus.setBackground(Color.WHITE);
-        
+
         String currentStatus = orders.get(0).getStatus().toUpperCase();
-        if(currentStatus.equals("MENUNGGU")) cbStatus.setSelectedItem("DIPROSES");
-        else if(Arrays.asList(options).contains(currentStatus)) cbStatus.setSelectedItem(currentStatus);
-        
-        styleComboBox(cbStatus, (String)cbStatus.getSelectedItem());
+        if (currentStatus.equals("MENUNGGU"))
+            cbStatus.setSelectedItem("DIPROSES");
+        else if (Arrays.asList(options).contains(currentStatus))
+            cbStatus.setSelectedItem(currentStatus);
+
+        styleComboBox(cbStatus, (String) cbStatus.getSelectedItem());
 
         cbStatus.addActionListener(e -> {
             String selected = (String) cbStatus.getSelectedItem();
-            for(Pesanan p : orders) {
+            for (Pesanan p : orders) {
                 sys.updateStatusPesanan(p.getId(), selected);
             }
             styleComboBox(cbStatus, selected);
         });
-        
+
         JPanel statusWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         statusWrapper.setOpaque(false);
         statusWrapper.add(cbStatus);
-        
+
         card.add(statusWrapper, gbc);
 
         return card;
     }
 
     private void styleComboBox(JComboBox<String> box, String status) {
-        if(status.contains("DIPROSES")) box.setForeground(COLOR_DIPROSES);
-        else if(status.contains("DIMASAK")) box.setForeground(COLOR_DIMASAK);
-        else box.setForeground(COLOR_SIAP);
+        if (status.contains("DIPROSES"))
+            box.setForeground(COLOR_DIPROSES);
+        else if (status.contains("DIMASAK"))
+            box.setForeground(COLOR_DIMASAK);
+        else
+            box.setForeground(COLOR_SIAP);
     }
 
     private JPanel createHeader() {
@@ -225,13 +231,14 @@ public class KokiGUI extends JFrame {
         btnLogout.setFocusPainted(false);
         btnLogout.setBorderPainted(false);
         btnLogout.setPreferredSize(new Dimension(100, 35));
-        
+
         // --- FIX MAC OS (Agar tombol Merah terlihat) ---
         btnLogout.setOpaque(true);
         btnLogout.setBorderPainted(false);
-        
+
         btnLogout.addActionListener(e -> {
-            if (refreshTimer != null) refreshTimer.stop();
+            if (refreshTimer != null)
+                refreshTimer.stop();
             dispose();
             new LoginGUI().setVisible(true);
         });
@@ -243,31 +250,40 @@ public class KokiGUI extends JFrame {
 
         return header;
     }
-    
+
     private JPanel createTableHeaders() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(THEME_BLUE);
         panel.setBorder(new EmptyBorder(12, 15, 12, 15));
-        
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
-        
+
         gbc.insets = new Insets(0, 5, 0, 5);
-        
+
         Font font = new Font("Segoe UI", Font.BOLD, 14);
         Color color = Color.WHITE;
 
-        gbc.gridx = 0; gbc.weightx = 0.25;
-        JLabel h1 = new JLabel("Info Meja"); h1.setFont(font); h1.setForeground(color);
+        gbc.gridx = 0;
+        gbc.weightx = 0.25;
+        JLabel h1 = new JLabel("Info Meja");
+        h1.setFont(font);
+        h1.setForeground(color);
         panel.add(h1, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 0.50;
-        JLabel h2 = new JLabel("Detail Menu"); h2.setFont(font); h2.setForeground(color);
+        gbc.gridx = 1;
+        gbc.weightx = 0.50;
+        JLabel h2 = new JLabel("Detail Menu");
+        h2.setFont(font);
+        h2.setForeground(color);
         panel.add(h2, gbc);
 
-        gbc.gridx = 2; gbc.weightx = 0.25;
-        JLabel h3 = new JLabel("Status Pesanan"); h3.setFont(font); h3.setForeground(color);
+        gbc.gridx = 2;
+        gbc.weightx = 0.25;
+        JLabel h3 = new JLabel("Status Pesanan");
+        h3.setFont(font);
+        h3.setForeground(color);
         panel.add(h3, gbc);
 
         return panel;

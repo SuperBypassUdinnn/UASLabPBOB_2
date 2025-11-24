@@ -6,20 +6,15 @@ public class DetailPesanan {
 
     private MenuItem menu;
     private int jumlah;
-    private String catatan;
+    // Catatan dihapus dari sini, pindah ke class Pesanan
 
-    public DetailPesanan(MenuItem menu, int jumlah, String catatan) {
+    public DetailPesanan(MenuItem menu, int jumlah) {
         this.menu = menu;
         this.jumlah = jumlah;
-        this.catatan = catatan;
     }
 
     public MenuItem getMenu() {
         return menu;
-    }
-
-    public void setMenu(MenuItem menu) {
-        this.menu = menu;
     }
 
     public int getJumlah() {
@@ -30,26 +25,12 @@ public class DetailPesanan {
         this.jumlah = jumlah;
     }
 
-    public String getCatatan() {
-        return catatan;
-    }
-
-    public void setCatatan(String catatan) {
-        this.catatan = catatan;
-    }
-
-    // ===============================
-    // SUBTOTAL ITEM
-    // ===============================
     public double getSubtotal() {
         return menu.getHarga() * jumlah;
     }
 
     @Override
     public String toString() {
-        return menu.getNama() +
-                " x" + jumlah +
-                " (Rp" + getSubtotal() + ")" +
-                (catatan != null && !catatan.isEmpty() ? " | Catatan: " + catatan : "");
+        return menu.getNama() + " x" + jumlah + " (Rp" + (int) getSubtotal() + ")";
     }
 }

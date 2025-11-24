@@ -23,12 +23,10 @@ public class Struk {
             System.out.println(
                     "- " + d.getMenu().getNama() +
                             " x" + d.getJumlah() +
-                            " = Rp" + d.getSubtotal() +
-                            (d.getCatatan() != null && !d.getCatatan().isEmpty()
-                                    ? " (catatan: " + d.getCatatan() + ")"
-                                    : ""));
+                            " = Rp" + d.getSubtotal());
         }
 
+        System.out.println("Catatan: " + p.getCatatan());
         System.out.println("------------------------------");
         System.out.println("TOTAL     : Rp" + transaksi.getTotal());
         System.out.println("Pembayaran: " + transaksi.getPembayaran().getJenis());
