@@ -9,7 +9,8 @@ public class RestaurantDriver {
         // Mengatur Look and Feel agar sesuai sistem operasi (Windows/Mac/Linux)
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                | javax.swing.UnsupportedLookAndFeelException ignored) {
         }
 
         // Menjalankan LoginGUI pada Event Dispatch Thread

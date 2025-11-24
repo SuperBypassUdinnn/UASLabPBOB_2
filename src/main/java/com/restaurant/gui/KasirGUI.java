@@ -5,22 +5,21 @@ import com.restaurant.model.pesanan.DetailPesanan;
 import com.restaurant.model.pesanan.Pesanan;
 import com.restaurant.model.transaksi.*;
 import com.restaurant.service.RestaurantSystem;
-
-import javax.swing.*;
-import javax.swing.border.*;
 import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import javax.swing.*;
+import javax.swing.border.*;
 
 public class KasirGUI extends JFrame {
 
-    private RestaurantSystem sys = RestaurantSystem.getInstance();
-    private JPanel listContainer;
-    private Timer refreshTimer;
+    private final RestaurantSystem sys = RestaurantSystem.getInstance();
+    private final JPanel listContainer;
+    private final Timer refreshTimer;
 
     // --- WARNA & FONT ---
     private final Color BG_COLOR = new Color(248, 250, 252);
@@ -214,7 +213,7 @@ public class KasirGUI extends JFrame {
 
         if (choice >= 0) {
             String metode = options[choice];
-            double bayar = 0;
+            double bayar;
 
             if (choice == 0) { // Cash logic
                 String input = JOptionPane.showInputDialog("Masukkan Uang Tunai:");
@@ -226,7 +225,7 @@ public class KasirGUI extends JFrame {
                         JOptionPane.showMessageDialog(this, "Uang kurang! Pembayaran dibatalkan.");
                         return;
                     }
-                } catch (Exception ex) {
+                } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(this, "Input harus angka!");
                     return;
                 }

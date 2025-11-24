@@ -4,30 +4,30 @@ import com.restaurant.model.akun.Akun;
 import com.restaurant.model.pesanan.DetailPesanan;
 import com.restaurant.model.pesanan.Pesanan;
 import com.restaurant.service.RestaurantSystem;
-
-import javax.swing.*;
-import javax.swing.border.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.Arrays;
+import javax.swing.*;
+import javax.swing.border.*;
 
 public class KokiGUI extends JFrame {
 
-    private JPanel listContainer;
-    private RestaurantSystem sys = RestaurantSystem.getInstance();
-    private Timer refreshTimer;
+    private final JPanel listContainer;
+    private final RestaurantSystem sys = RestaurantSystem.getInstance();
+    private final Timer refreshTimer;
 
     // --- WARNA ---
     private final Color THEME_BLUE = new Color(59, 130, 246);
     private final Color BG_COLOR = new Color(248, 250, 252);
+    private final Color CARD_BG = Color.WHITE;
 
     // Status Colors
-    private final Color COLOR_DIPROSES = new Color(234, 179, 8); // Kuning
-    private final Color COLOR_DIMASAK = new Color(59, 130, 246); // Biru
-    private final Color COLOR_SIAP = new Color(34, 197, 94); // Hijau
+    private final Color COLOR_BTN_COOK = new Color(234, 179, 8); // Kuning (Mulai Masak)
+    private final Color COLOR_BTN_DONE = new Color(34, 197, 94); // Hijau (Selesai)
+    private final Color COLOR_DISABLED = new Color(209, 213, 219); // Abu-abu
 
     public KokiGUI(Akun akun) {
         setTitle("Dapur Restaurant - Chef " + akun.getNama());
@@ -71,7 +71,7 @@ public class KokiGUI extends JFrame {
 
         // 1. FILTER: Hanya ambil status aktif dapur
         List<String> visibleStatuses = Arrays.asList(
-                "MENUNGGU", "DIPROSES", "SEDANG DIMASAK", "SIAP DISAJIKAN");
+                "DIPROSES", "SEDANG DIMASAK"); // Koki hanya melihat yang perlu diproses
 
         List<Pesanan> filtered = new ArrayList<>();
         if (allOrders != null) {
@@ -83,7 +83,7 @@ public class KokiGUI extends JFrame {
         }
 
         if (filtered.isEmpty()) {
-            JLabel empty = new JLabel("Tidak ada pesanan aktif.", SwingConstants.CENTER);
+            JLabel empty = new JLabel("Tidak ada pesanan aktif di dapur.", SwingConstants.CENTER);
             empty.setFont(new Font("Segoe UI", Font.ITALIC, 14));
             empty.setForeground(Color.GRAY);
             empty.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -94,17 +94,14 @@ public class KokiGUI extends JFrame {
             Map<Integer, List<Pesanan>> groupedByTable = filtered.stream()
                     .collect(Collectors.groupingBy(p -> p.getMeja().getNomor()));
 
-            // Sort by nomor meja
             List<Integer> sortedTables = new ArrayList<>(groupedByTable.keySet());
             java.util.Collections.sort(sortedTables);
 
             for (Integer mejaNum : sortedTables) {
                 List<Pesanan> pesananMeja = groupedByTable.get(mejaNum);
-
                 JPanel wrapper = new JPanel(new BorderLayout());
                 wrapper.setBackground(BG_COLOR);
                 wrapper.add(createGroupCard(mejaNum, pesananMeja), BorderLayout.NORTH);
-
                 listContainer.add(wrapper);
                 listContainer.add(Box.createVerticalStrut(15));
             }
@@ -115,10 +112,9 @@ public class KokiGUI extends JFrame {
         listContainer.repaint();
     }
 
-    // --- KARTU GROUP (SATU MEJA BANYAK ITEM) ---
     private JPanel createGroupCard(int mejaNum, List<Pesanan> orders) {
         JPanel card = new JPanel(new GridBagLayout());
-        card.setBackground(Color.WHITE);
+        card.setBackground(CARD_BG);
         card.setBorder(new CompoundBorder(
                 new LineBorder(new Color(230, 230, 230), 1),
                 new EmptyBorder(15, 15, 15, 15)));
@@ -147,9 +143,9 @@ public class KokiGUI extends JFrame {
         infoPanel.add(lblId);
         card.add(infoPanel, gbc);
 
-        // --- 2. DETAIL MENU (GABUNGAN SEMUA PESANAN) ---
+        // --- 2. DETAIL MENU ---
         gbc.gridx = 1;
-        gbc.weightx = 0.50;
+        gbc.weightx = 0.45;
 
         StringBuilder sb = new StringBuilder("<html><body style='font-family: Segoe UI;'>");
         for (Pesanan p : orders) {
@@ -157,12 +153,11 @@ public class KokiGUI extends JFrame {
                 sb.append("<div style='margin-bottom: 4px;'>");
                 sb.append("<b>").append(dp.getMenu().getNama()).append("</b>");
                 sb.append(" <span style='color:gray'>x").append(dp.getJumlah()).append("</span>");
-
                 sb.append("</div>");
             }
-            if (p.getCatatan() != null && !p.getCatatan().isEmpty()) {
-                sb.append("<br><span style='color:rgb(220,38,38); font-size:11px;'><i>*")
-                        .append(p.getCatatan()).append("</i></span>");
+            if (p.getCatatan() != null && !p.getCatatan().isEmpty() && !p.getCatatan().equals("-")) {
+                sb.append("<span style='color:rgb(220,38,38); font-size:11px;'><i>Note: ")
+                        .append(p.getCatatan()).append("</i></span><br>");
             }
         }
         sb.append("</body></html>");
@@ -171,47 +166,67 @@ public class KokiGUI extends JFrame {
         lblMenu.setVerticalAlignment(SwingConstants.TOP);
         card.add(lblMenu, gbc);
 
-        // --- 3. STATUS DROPDOWN (BATCH UPDATE) ---
+        // --- 3. ACTION BUTTONS (MODIFIKASI DISINI) ---
         gbc.gridx = 2;
-        gbc.weightx = 0.25;
+        gbc.weightx = 0.30;
 
-        String[] options = { "DIPROSES", "SEDANG DIMASAK", "SIAP DISAJIKAN" };
-        JComboBox<String> cbStatus = new JComboBox<>(options);
-        cbStatus.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        cbStatus.setBackground(Color.WHITE);
+        JPanel btnPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        btnPanel.setOpaque(false);
 
-        String currentStatus = orders.get(0).getStatus().toUpperCase();
-        if (currentStatus.equals("MENUNGGU"))
-            cbStatus.setSelectedItem("DIPROSES");
-        else if (Arrays.asList(options).contains(currentStatus))
-            cbStatus.setSelectedItem(currentStatus);
+        // Cek status saat ini (ambil dari pesanan pertama di grup)
+        String currentStatus = orders.get(0).getStatus();
 
-        styleComboBox(cbStatus, (String) cbStatus.getSelectedItem());
+        JButton btnMulai = new JButton("<html><center>Mulai<br>Masak</center></html>");
+        JButton btnSelesai = new JButton("<html><center>Tandai<br>Selesai</center></html>");
 
-        cbStatus.addActionListener(e -> {
-            String selected = (String) cbStatus.getSelectedItem();
+        styleButton(btnMulai, COLOR_BTN_COOK);
+        styleButton(btnSelesai, COLOR_BTN_DONE);
+
+        // LOGIKA BATASAN STATUS
+        if ("DIPROSES".equals(currentStatus)) {
+            // Jika baru masuk, hanya bisa klik Mulai. Selesai disable.
+            btnMulai.setEnabled(true);
+            btnSelesai.setEnabled(false);
+            btnSelesai.setBackground(COLOR_DISABLED);
+        } else if ("SEDANG DIMASAK".equals(currentStatus)) {
+            // Jika sedang masak, tombol Mulai disable, tombol Selesai aktif.
+            btnMulai.setEnabled(false);
+            btnMulai.setBackground(COLOR_DISABLED);
+            btnSelesai.setEnabled(true);
+        }
+
+        // Action Listener: Mulai Masak (DIPROSES -> SEDANG DIMASAK)
+        btnMulai.addActionListener(e -> {
             for (Pesanan p : orders) {
-                sys.updateStatusPesanan(p.getId(), selected);
+                sys.updateStatusPesanan(p.getId(), "SEDANG DIMASAK");
             }
-            styleComboBox(cbStatus, selected);
+            refreshList();
         });
 
-        JPanel statusWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        statusWrapper.setOpaque(false);
-        statusWrapper.add(cbStatus);
+        // Action Listener: Selesai Masak (SEDANG DIMASAK -> SIAP DISAJIKAN)
+        btnSelesai.addActionListener(e -> {
+            for (Pesanan p : orders) {
+                sys.updateStatusPesanan(p.getId(), "SIAP DISAJIKAN");
+            }
+            refreshList(); // Item akan hilang dari list karena status filter
+            JOptionPane.showMessageDialog(this, "Pesanan Meja " + mejaNum + " siap disajikan!");
+        });
 
-        card.add(statusWrapper, gbc);
+        btnPanel.add(btnMulai);
+        btnPanel.add(btnSelesai);
+        card.add(btnPanel, gbc);
 
         return card;
     }
 
-    private void styleComboBox(JComboBox<String> box, String status) {
-        if (status.contains("DIPROSES"))
-            box.setForeground(COLOR_DIPROSES);
-        else if (status.contains("DIMASAK"))
-            box.setForeground(COLOR_DIMASAK);
-        else
-            box.setForeground(COLOR_SIAP);
+    private void styleButton(JButton btn, Color color) {
+        btn.setBackground(color);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setOpaque(true);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     private JPanel createHeader() {
@@ -226,16 +241,11 @@ public class KokiGUI extends JFrame {
         header.add(title, BorderLayout.WEST);
 
         JButton btnLogout = new JButton("Logout");
-        btnLogout.setBackground(new Color(220, 53, 69)); // Merah
+        btnLogout.setBackground(new Color(220, 53, 69));
         btnLogout.setForeground(Color.WHITE);
         btnLogout.setFocusPainted(false);
         btnLogout.setBorderPainted(false);
-        btnLogout.setPreferredSize(new Dimension(100, 35));
-
-        // --- FIX MAC OS (Agar tombol Merah terlihat) ---
         btnLogout.setOpaque(true);
-        btnLogout.setBorderPainted(false);
-
         btnLogout.addActionListener(e -> {
             if (refreshTimer != null)
                 refreshTimer.stop();
@@ -255,13 +265,10 @@ public class KokiGUI extends JFrame {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(THEME_BLUE);
         panel.setBorder(new EmptyBorder(12, 15, 12, 15));
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
-
         gbc.insets = new Insets(0, 5, 0, 5);
-
         Font font = new Font("Segoe UI", Font.BOLD, 14);
         Color color = Color.WHITE;
 
@@ -271,17 +278,15 @@ public class KokiGUI extends JFrame {
         h1.setFont(font);
         h1.setForeground(color);
         panel.add(h1, gbc);
-
         gbc.gridx = 1;
-        gbc.weightx = 0.50;
+        gbc.weightx = 0.45;
         JLabel h2 = new JLabel("Detail Menu");
         h2.setFont(font);
         h2.setForeground(color);
         panel.add(h2, gbc);
-
         gbc.gridx = 2;
-        gbc.weightx = 0.25;
-        JLabel h3 = new JLabel("Status Pesanan");
+        gbc.weightx = 0.30;
+        JLabel h3 = new JLabel("Aksi Koki");
         h3.setFont(font);
         h3.setForeground(color);
         panel.add(h3, gbc);

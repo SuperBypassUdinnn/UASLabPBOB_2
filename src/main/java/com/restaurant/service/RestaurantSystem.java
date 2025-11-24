@@ -1,11 +1,10 @@
 package com.restaurant.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.restaurant.model.menu.*;
 import com.restaurant.model.pesanan.*;
 import com.restaurant.model.transaksi.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RestaurantSystem {
 
@@ -22,9 +21,9 @@ public class RestaurantSystem {
         idCounter = FileStorageService.loadLastId();
     }
 
+    private final List<Meja> mejaList = new ArrayList<>();
     private List<MenuItem> menu = new ArrayList<>();
     private List<Pesanan> daftarPesanan = new ArrayList<>();
-    private List<Meja> mejaList = new ArrayList<>();
     private int idCounter = 1;
 
     private void initMeja() {

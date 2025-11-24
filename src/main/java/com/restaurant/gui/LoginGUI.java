@@ -69,7 +69,9 @@ public class LoginGUI extends JFrame {
 
             if (a != null) {
                 String role = a.getRole();
-                JOptionPane.showMessageDialog(this, "Login Berhasil sebagai " + role);
+                String nama = a.getNama();
+                JOptionPane.showMessageDialog(this, "Selamat Datang " + nama + " (" + role + ")", "Login Berhasil",
+                        JOptionPane.INFORMATION_MESSAGE);
                 dispose();
 
                 SwingUtilities.invokeLater(() -> {
@@ -156,34 +158,50 @@ public class LoginGUI extends JFrame {
             String user = tfUser.getText();
             String pass = new String(pfPass.getPassword());
             String email = tfEmail.getText();
-            String tipe = (String) cbTipe.getSelectedItem();
 
-            if (user.isEmpty() || pass.isEmpty() || email.isEmpty()) {
+            if (nama.isEmpty() || user.isEmpty() || pass.isEmpty() || email.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Harap isi semua kolom.", "Peringatan",
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            boolean success;
-            if ("Customer".equals(tipe)) {
-                success = auth.registerCustomer(nama, user, pass, email);
-            } else {
-                String role = (String) cbRole.getSelectedItem();
-                success = auth.registerPegawai(nama, user, pass, email, role);
-                if (!success) {
-                    // FIX PESAN ERROR SESUAI PERMINTAAN
-                    JOptionPane.showMessageDialog(this, "Anda tidak memiliki akses untuk mendaftar sebagai pegawai",
-                            "Akses Ditolak",
-                            JOptionPane.ERROR_MESSAGE);
-                    return;
+            String role = (String) cbRole.getSelectedItem();
+            int success = auth.register(nama, user, pass, email, role);
+            switch (success) {
+                case 0 -> {
+                    JOptionPane.showMessageDialog(this, "Registrasi Berhasil.", "SUKSES",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    cardLayout.show(cardContainer, "LOGIN");
                 }
-            }
-
-            if (success) {
-                JOptionPane.showMessageDialog(this, "Registrasi Berhasil!", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-                cardLayout.show(cardContainer, "LOGIN");
-            } else {
-                JOptionPane.showMessageDialog(this, "Username sudah digunakan.", "Gagal", JOptionPane.ERROR_MESSAGE);
+                case 1 -> {
+                    JOptionPane.showMessageDialog(this,
+                            "Username harus 5-12 karakter. Tidak boleh ada karakter spesial",
+                            "GAGAL",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                case 2 -> {
+                    JOptionPane.showMessageDialog(this, "Username telah digunakan.", "GAGAL",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                case 3 -> {
+                    JOptionPane.showMessageDialog(this, "Email tidak valid atau domain tidak terdaftar.", "GAGAL",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                case 4 -> {
+                    JOptionPane.showMessageDialog(this, "Anda tidak memiliki akses untuk mendaftar sebagai pegawai.",
+                            "GAGAL",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                case 5 -> {
+                    JOptionPane.showMessageDialog(this, "Email sudah digunakan.", "GAGAL",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                case 6 -> {
+                    JOptionPane.showMessageDialog(this,
+                            "Password tidak kuat. Gunakan kombinasi Upper Case, Lower Case, Digit, dan Special Character",
+                            "GAGAL",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
         panel.add(btnDaftar, gbc);
