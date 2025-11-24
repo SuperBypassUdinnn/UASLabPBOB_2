@@ -1,194 +1,263 @@
 package com.restaurant.gui;
 
 import com.restaurant.model.akun.Akun;
-// PERBAIKAN: Import spesifik agar tidak bentrok dengan java.awt.MenuItem
-import com.restaurant.model.menu.MenuItem; 
-import com.restaurant.model.menu.Makanan;
-import com.restaurant.model.menu.Minuman;
+import com.restaurant.model.menu.MenuItem;
 import com.restaurant.model.pesanan.DetailPesanan;
 import com.restaurant.model.pesanan.Pesanan;
 import com.restaurant.service.RestaurantSystem;
 
 import javax.swing.*;
 import javax.swing.border.*;
-import java.awt.*; 
+import java.awt.*;
+import java.util.List;
+import javax.swing.Timer;
 
 public class PelayanGUI extends JFrame {
 
     private RestaurantSystem sys = RestaurantSystem.getInstance();
-    
+
+    // Komponen Tab Input
     private JTextField tfMeja;
     private JComboBox<String> cbMenu;
     private JSpinner spinJumlah;
     private JTextField tfCatatan;
     private DefaultListModel<String> cartModel;
-    
     private java.util.List<DetailPesanan> tempItems = new java.util.ArrayList<>();
+
+    // Komponen Tab Sajikan
+    private JPanel pnlSiapSaji;
+    private Timer refreshTimer;
 
     public PelayanGUI(Akun akun) {
         setTitle("Dashboard Pelayan - " + akun.getNama());
-        setSize(600, 700); 
+        setSize(800, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(new Color(248, 250, 252));
-        setContentPane(mainPanel);
+        // Header
+        add(createHeader(), BorderLayout.NORTH);
 
-        // --- Header ---
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(new Color(59, 130, 246));
-        header.setPreferredSize(new Dimension(100, 60));
-        header.setBorder(new EmptyBorder(0, 20, 0, 20));
-        
-        JLabel lblTitle = new JLabel("Input Pesanan Baru");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblTitle.setForeground(Color.WHITE);
-        header.add(lblTitle, BorderLayout.WEST);
-        
-        JButton btnLogout = new JButton("Logout");
-        btnLogout.setBackground(new Color(220, 53, 69)); // Merah
-        btnLogout.setForeground(Color.WHITE);
-        btnLogout.setFocusPainted(false);
-        btnLogout.setBorderPainted(false);
-        // FIX MAC OS
-        btnLogout.setOpaque(true); 
-        
-        btnLogout.addActionListener(e -> { dispose(); new LoginGUI().setVisible(true); });
-        
-        JPanel btnP = new JPanel(new GridBagLayout()); 
-        btnP.setOpaque(false); 
-        btnP.add(btnLogout);
-        header.add(btnP, BorderLayout.EAST);
-        
-        mainPanel.add(header, BorderLayout.NORTH);
+        JTabbedPane tabbedPane = new JTabbedPane();
 
-        // --- Content Area ---
+        // Tab 1: Input Order (Kode lama dipindahkan ke method createInputPanel)
+        tabbedPane.addTab("Input Pesanan Baru", createInputPanel());
+
+        // Tab 2: Antar Pesanan (Fitur Baru untuk replace CLI Sajikan Pesanan)
+        tabbedPane.addTab("Antar Pesanan (Siap Saji)", createServePanel());
+
+        add(tabbedPane, BorderLayout.CENTER);
+
+        // Auto Refresh untuk Tab Antar Pesanan
+        refreshTimer = new Timer(3000, e -> refreshServeList());
+        refreshTimer.start();
+        refreshServeList();
+    }
+
+    // PANEL 1: INPUT PESANAN (Logika Lama)
+    private JPanel createInputPanel() {
         JPanel content = new JPanel(new BorderLayout(15, 15));
         content.setBorder(new EmptyBorder(20, 20, 20, 20));
         content.setBackground(new Color(248, 250, 252));
 
-        // --- Form Input Panel ---
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(Color.WHITE);
-        formPanel.setBorder(new CompoundBorder(new LineBorder(Color.LIGHT_GRAY), new EmptyBorder(15,15,15,15)));
-        
+        formPanel.setBorder(new CompoundBorder(new LineBorder(Color.LIGHT_GRAY), new EmptyBorder(15, 15, 15, 15)));
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        
-        // Row 0: Meja
-        gbc.gridx=0; gbc.gridy=0; formPanel.add(new JLabel("Nomor Meja:"), gbc);
-        tfMeja = new JTextField(); 
-        gbc.gridx=1; gbc.gridy=0; gbc.weightx=1.0; formPanel.add(tfMeja, gbc);
 
-        // Row 1: Menu
-        gbc.gridx=0; gbc.gridy=1; gbc.weightx=0; formPanel.add(new JLabel("Menu:"), gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        formPanel.add(new JLabel("Nomor Meja:"), gbc);
+        tfMeja = new JTextField();
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        formPanel.add(tfMeja, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0;
+        formPanel.add(new JLabel("Menu:"), gbc);
         cbMenu = new JComboBox<>();
-
-        // === LOGIKA DATA DUMMY ===
-        // Jika list menu kosong (file tidak terbaca), isi dengan data sementara
-        if (sys.getMenuList() == null || sys.getMenuList().isEmpty()) {
-            try {
-                // Menggunakan class Makanan dan Minuman karena MenuItem abstract
-                sys.getMenuList().add(new Makanan("Mie Aceh Spesial", 25000, "Main Course", "Pedas"));
-                sys.getMenuList().add(new Makanan("Nasi Goreng Kampung", 20000, "Main Course", "Sedang"));
-                sys.getMenuList().add(new Makanan("Ayam Penyet", 18000, "Main Course", "Pedas"));
-                sys.getMenuList().add(new Minuman("Es Teh Tarik", 12000, "Medium", "Dingin"));
-                sys.getMenuList().add(new Minuman("Kopi Gayo", 15000, "Medium", "Panas"));
-                sys.getMenuList().add(new Minuman("Jus Jeruk", 10000, "Large", "Dingin"));
-            } catch (Exception ignored) {
-                // Abaikan error jika terjadi duplikasi saat hot-reload
-            }
+        // Load Menu
+        if (sys.getMenuList() != null) {
+            for (MenuItem m : sys.getMenuList())
+                cbMenu.addItem(m.getNama());
         }
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.weightx = 1.0;
+        formPanel.add(cbMenu, gbc);
 
-        // Masukkan data ke ComboBox
-        if(sys.getMenuList() != null) {
-             for (MenuItem m : sys.getMenuList()) cbMenu.addItem(m.getNama());
-        }
-        gbc.gridx=1; gbc.gridy=1; gbc.weightx=1.0; formPanel.add(cbMenu, gbc);
-
-        // Row 2: Jumlah
-        gbc.gridx=0; gbc.gridy=2; gbc.weightx=0; formPanel.add(new JLabel("Jumlah:"), gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weightx = 0;
+        formPanel.add(new JLabel("Jumlah:"), gbc);
         spinJumlah = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
-        gbc.gridx=1; gbc.gridy=2; gbc.weightx=1.0; formPanel.add(spinJumlah, gbc);
-        
-        // Row 3: Catatan
-        gbc.gridx=0; gbc.gridy=3; gbc.weightx=0; formPanel.add(new JLabel("Catatan:"), gbc);
-        tfCatatan = new JTextField();
-        gbc.gridx=1; gbc.gridy=3; gbc.weightx=1.0; formPanel.add(tfCatatan, gbc);
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.weightx = 1.0;
+        formPanel.add(spinJumlah, gbc);
 
-        // Row 4: Tombol Tambah Item
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.weightx = 0;
+        formPanel.add(new JLabel("Catatan:"), gbc);
+        tfCatatan = new JTextField();
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.weightx = 1.0;
+        formPanel.add(tfCatatan, gbc);
+
         JButton btnAdd = new JButton("Tambah Item");
-        btnAdd.setBackground(new Color(59, 130, 246)); // Biru
+        btnAdd.setBackground(new Color(59, 130, 246));
         btnAdd.setForeground(Color.WHITE);
-        btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnAdd.setFocusPainted(false);
-        // FIX MAC OS
-        btnAdd.setOpaque(true);
-        btnAdd.setBorderPainted(false);
-        
         btnAdd.addActionListener(e -> tambahKeKeranjang());
-        gbc.gridx=1; gbc.gridy=4; formPanel.add(btnAdd, gbc);
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        formPanel.add(btnAdd, gbc);
 
         content.add(formPanel, BorderLayout.NORTH);
 
-        // --- List Keranjang ---
         cartModel = new DefaultListModel<>();
         JList<String> cartList = new JList<>(cartModel);
         cartList.setBorder(new TitledBorder("Keranjang Sementara"));
         content.add(new JScrollPane(cartList), BorderLayout.CENTER);
 
-        // --- Tombol Kirim ---
-        JButton btnKirim = new JButton("KIRIM PESANAN KE DAPUR");
-        btnKirim.setBackground(new Color(34, 197, 94)); // Hijau
+        JButton btnKirim = new JButton("KIRIM KE DAPUR");
+        btnKirim.setBackground(new Color(34, 197, 94));
         btnKirim.setForeground(Color.WHITE);
-        btnKirim.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnKirim.setPreferredSize(new Dimension(100, 50));
-        // FIX MAC OS
-        btnKirim.setOpaque(true);
-        btnKirim.setBorderPainted(false);
-        
         btnKirim.addActionListener(e -> kirimPesanan());
-        
-        content.add(btnKirim, BorderLayout.SOUTH);
 
-        mainPanel.add(content, BorderLayout.CENTER);
+        content.add(btnKirim, BorderLayout.SOUTH);
+        return content;
     }
 
+    // PANEL 2: SERVE ORDER (Logika Baru Integrasi CLI)
+    private JComponent createServePanel() {
+        pnlSiapSaji = new JPanel();
+        pnlSiapSaji.setLayout(new BoxLayout(pnlSiapSaji, BoxLayout.Y_AXIS));
+        pnlSiapSaji.setBackground(new Color(248, 250, 252));
+        return new JScrollPane(pnlSiapSaji);
+    }
+
+    private void refreshServeList() {
+        pnlSiapSaji.removeAll();
+        sys.refreshPesananFromFile();
+        List<Pesanan> all = sys.getDaftarPesanan();
+
+        boolean adaData = false;
+        for (Pesanan p : all) {
+            // Pelayan hanya melihat pesanan yg "SIAP DISAJIKAN" (Output Koki)
+            if ("SIAP DISAJIKAN".equals(p.getStatus())) {
+                adaData = true;
+                JPanel card = new JPanel(new BorderLayout());
+                card.setBorder(new CompoundBorder(new LineBorder(Color.LIGHT_GRAY), new EmptyBorder(10, 10, 10, 10)));
+                card.setBackground(Color.WHITE);
+                card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+
+                JLabel lblInfo = new JLabel(
+                        "<html><b>Meja " + p.getMeja().getNomor() + "</b> - Pesanan #" + p.getId() + "</html>");
+                lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+                JButton btnSajikan = new JButton("Sajikan ke Meja");
+                btnSajikan.setBackground(new Color(34, 197, 94));
+                btnSajikan.setForeground(Color.WHITE);
+
+                // Action: Ubah status jadi DISAJIKAN (Agar muncul di Kasir)
+                btnSajikan.addActionListener(e -> {
+                    sys.updateStatusPesanan(p.getId(), "DISAJIKAN");
+                    JOptionPane.showMessageDialog(this, "Pesanan disajikan ke Meja " + p.getMeja().getNomor());
+                    refreshServeList();
+                });
+
+                card.add(lblInfo, BorderLayout.CENTER);
+                card.add(btnSajikan, BorderLayout.EAST);
+
+                pnlSiapSaji.add(card);
+                pnlSiapSaji.add(Box.createVerticalStrut(10));
+            }
+        }
+
+        if (!adaData) {
+            JLabel empty = new JLabel("Tidak ada pesanan yang perlu diantar.");
+            empty.setAlignmentX(CENTER_ALIGNMENT);
+            pnlSiapSaji.add(empty);
+        }
+
+        pnlSiapSaji.revalidate();
+        pnlSiapSaji.repaint();
+    }
+
+    // --- Helper Methods untuk Input ---
     private void tambahKeKeranjang() {
         String nama = (String) cbMenu.getSelectedItem();
-        if (nama == null) return;
-
+        if (nama == null)
+            return;
         int qty = (int) spinJumlah.getValue();
         String cat = tfCatatan.getText();
-        
+
         MenuItem item = null;
-        for(MenuItem m : sys.getMenuList()) if(m.getNama().equals(nama)) item = m;
-        
-        if(item != null) {
+        for (MenuItem m : sys.getMenuList())
+            if (m.getNama().equals(nama))
+                item = m;
+
+        if (item != null) {
             tempItems.add(new DetailPesanan(item, qty, cat));
-            cartModel.addElement(nama + " x" + qty + (cat.isEmpty() ? "" : " ("+cat+")"));
-            spinJumlah.setValue(1); tfCatatan.setText("");
+            cartModel.addElement(nama + " x" + qty);
+            spinJumlah.setValue(1);
+            tfCatatan.setText("");
         }
     }
 
     private void kirimPesanan() {
-        if(tfMeja.getText().isEmpty() || tempItems.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Data belum lengkap!"); return;
+        if (tfMeja.getText().isEmpty() || tempItems.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Data belum lengkap!");
+            return;
         }
         try {
             int meja = Integer.parseInt(tfMeja.getText());
             Pesanan p = sys.buatPesananKosong(meja);
-            for(DetailPesanan dp : tempItems) p.tambahItem(dp);
-            
-            p.setStatus("DIPROSES"); // Langsung ke Koki
+            for (DetailPesanan dp : tempItems)
+                p.tambahItem(dp);
+
+            // Jika pelayan input, status awal DIPROSES (langsung ke koki)
+            // atau MENUNGGU jika ingin konfirmasi dulu. Sesuai CLI lama: DIPROSES
+            p.setStatus("DIPROSES");
             sys.saveData();
-            
+
             JOptionPane.showMessageDialog(this, "Terkirim ke Dapur!");
-            tempItems.clear(); cartModel.clear(); tfMeja.setText("");
-        } catch(Exception e) {
+            tempItems.clear();
+            cartModel.clear();
+            tfMeja.setText("");
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Meja harus angka!");
         }
+    }
+
+    private JPanel createHeader() {
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(new Color(59, 130, 246));
+        header.setBorder(new EmptyBorder(10, 20, 10, 20));
+
+        JLabel lblTitle = new JLabel("Pelayan Dashboard");
+        lblTitle.setForeground(Color.WHITE);
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+
+        JButton btnLogout = new JButton("Logout");
+        btnLogout.setBackground(Color.RED);
+        btnLogout.setForeground(Color.WHITE);
+        btnLogout.addActionListener(e -> {
+            refreshTimer.stop();
+            dispose();
+            new LoginGUI().setVisible(true);
+        });
+
+        header.add(lblTitle, BorderLayout.WEST);
+        header.add(btnLogout, BorderLayout.EAST);
+        return header;
     }
 }
