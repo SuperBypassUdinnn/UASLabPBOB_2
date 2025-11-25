@@ -139,8 +139,9 @@ public class CustomerGUI extends JFrame {
         pnlInputMeja.add(lblPilih);
         tfNomorMeja = new JTextField(5);
         tfNomorMeja.setOpaque(true);
-        tfNomorMeja.setForeground(Color.WHITE);
-        tfNomorMeja.setCaretColor(Color.WHITE);
+        tfNomorMeja.setBackground(CARD_BG);
+        tfNomorMeja.setForeground(Color.BLACK);
+        tfNomorMeja.setCaretColor(Color.BLACK);
         pnlInputMeja.add(tfNomorMeja);
 
         JPanel pnlTopRight = new JPanel(new BorderLayout());
@@ -193,6 +194,7 @@ public class CustomerGUI extends JFrame {
         JButton btnClear = new JButton("Reset");
         btnClear.setBackground(new Color(220, 53, 69));
         btnClear.setForeground(Color.WHITE);
+        btnClear.setFont(new Font("Arial", Font.BOLD, 14));
         btnClear.setOpaque(true);
         btnClear.setBorderPainted(false);
         btnClear.addActionListener(e -> resetKeranjang());
@@ -359,6 +361,7 @@ public class CustomerGUI extends JFrame {
         }
         if (!ada) {
             JLabel lbl = new JLabel("Belum ada riwayat.");
+            lbl.setFont(new Font("Segoe UI", Font.ITALIC, 14));
             lbl.setForeground(Color.GRAY);
             lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
             pnlStatus.add(lbl);

@@ -94,12 +94,14 @@ public class PelayanGUI extends JFrame {
         // Pesan kosong jika tidak ada data
         if (pnlPesananMasuk.getComponentCount() == 0) {
             JLabel lbl = new JLabel("Tidak ada pesanan baru.");
+            lbl.setFont(new Font("Segoe UI", Font.ITALIC, 14));
             lbl.setForeground(Color.GRAY);
             lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
             pnlPesananMasuk.add(lbl);
         }
         if (pnlSiapSaji.getComponentCount() == 0) {
             JLabel lbl = new JLabel("Tidak ada pesanan siap saji.");
+            lbl.setFont(new Font("Segoe UI", Font.ITALIC, 14));
             lbl.setForeground(Color.GRAY);
             lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
             pnlSiapSaji.add(lbl);

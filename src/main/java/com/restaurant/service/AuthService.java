@@ -85,7 +85,7 @@ public class AuthService {
             return 3;
         if (!role.equalsIgnoreCase("customer")) {
             // Domain harus rasaaceh.id
-            if (!isValidPegawaiEmail(email, "rasaaceh.id"))
+            if (!isHasAccessEmail(email, "rasaaceh.id"))
                 return 4;
         }
         if (isEmailTaken(email))
@@ -133,7 +133,7 @@ public class AuthService {
         return false;
     }
 
-    public boolean isValidPegawaiEmail(String email, String requiredDomain) {
+    public boolean isHasAccessEmail(String email, String requiredDomain) {
         String domain = email.substring(email.lastIndexOf("@") + 1);
         return domain.equalsIgnoreCase(requiredDomain);
     }
