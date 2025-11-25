@@ -53,11 +53,11 @@ Sistem Manajemen Pesanan Restoran ini melayani fungsionalitas utama sebagai beri
    java -cp .\src\main\java\ com.restaurant.app.RestaurantDriver
    ```
 
-  **Di Linux/Mac (Terminal):**
-  ```bash
-  # Compile (Mengkompilasi semua file .java)
-  javac $(find . -name *.java)
-
-  # Run (Menjalankan aplikasi)
-  java -cp src/main/java com.restaurant.app.RestaurantDriver
-  ```
+    **Di Linux/Mac (Terminal):**
+    ```bash
+    # Compile (Mengkompilasi semua file .java)
+    javac $(find . -name *.java)
+  
+    # Run (Menjalankan aplikasi)
+    java -cp src/main/java com.restaurant.app.RestaurantDriver
+    ```
