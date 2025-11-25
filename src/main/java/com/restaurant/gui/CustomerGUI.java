@@ -24,6 +24,8 @@ public class CustomerGUI extends JFrame {
     private final Color HEADER_COLOR = new Color(59, 130, 246);
     private final Color CARD_BG = Color.WHITE;
     private final Color BTN_ADD_COLOR = new Color(37, 99, 235);
+    private final Color COLOR_DISABLED = new Color(209, 213, 219); // Abu-abu
+    private final Color TEXT_COLOR_DISABLED = new Color(145, 146, 148); // Abu-abu
 
     // Components
     private final List<DetailPesanan> keranjang = new ArrayList<>();
@@ -365,16 +367,16 @@ public class CustomerGUI extends JFrame {
         pnlStatus.repaint();
     }
 
-    // --- HELPER: UBAH STATUS JADI BAHASA MANUSIA ---
-    private String getFriendlyStatus(String rawStatus) {
-        return switch (rawStatus.toUpperCase()) {
+    private String statusForCustomer(String Status) {
+        return switch (Status.toUpperCase()) {
             case "MENUNGGU" -> "Menunggu Konfirmasi Pelayan";
             case "DIPROSES" -> "Pesanan Diterima Dapur";
             case "SEDANG DIMASAK" -> "Sedang Dimasak oleh Chef";
             case "SIAP DISAJIKAN" -> "Makanan Siap, Menunggu Diantar";
             case "DISAJIKAN" -> "Sudah Diantar (Silakan Bayar)";
             case "LUNAS" -> "Pesanan Selesai";
-            default -> rawStatus;
+            case "MENUNGGU PEMBAYARAN" -> "Menunggu Pembayaran di Kasir";
+            default -> Status;
         };
     }
 
@@ -386,10 +388,10 @@ public class CustomerGUI extends JFrame {
         card.setBackground(CARD_BG);
         card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
 
-        String friendlyStatus = getFriendlyStatus(p.getStatus());
+        String Status = statusForCustomer(p.getStatus());
         String headerTxt = "<html><b style='color:black; font-size:14px;'>Order #" + p.getId() + "</b> (Meja "
                 + p.getMeja().getNomor() + ")<br>"
-                + "Status: <span style='color:#2563EB; font-weight:bold;'>" + friendlyStatus + "</span></html>";
+                + "Status: <span style='color:#2563EB; font-weight:bold;'>" + Status + "</span></html>";
 
         StringBuilder detailTxt = new StringBuilder("<html><body style='color:#555; font-size:11px;'>");
         detailTxt.append("Menu: ");
@@ -409,22 +411,38 @@ public class CustomerGUI extends JFrame {
 
         card.add(infoPanel, BorderLayout.CENTER);
 
-        if ("LUNAS".equals(p.getStatus())) {
-            JButton btn = new JButton("Struk");
-            btn.setBackground(HEADER_COLOR);
-            btn.setForeground(Color.WHITE);
-            btn.setOpaque(true);
-            btn.setBorderPainted(false);
-            btn.addActionListener(e -> showStruk(p));
-            card.add(btn, BorderLayout.EAST);
-        } else if ("DISAJIKAN".equals(p.getStatus())) {
-            JButton btn = new JButton("Bayar");
-            btn.setBackground(Color.ORANGE);
-            btn.setOpaque(true);
-            btn.setBorderPainted(false);
-            btn.addActionListener(
-                    e -> JOptionPane.showMessageDialog(this, "Silakan ke kasir untuk bayar Order #" + p.getId()));
-            card.add(btn, BorderLayout.EAST);
+        switch (p.getStatus().toUpperCase()) {
+            case "LUNAS" -> {
+                JButton btn = new JButton("Struk");
+                btn.setBackground(HEADER_COLOR);
+                btn.setForeground(Color.WHITE);
+                btn.setOpaque(true);
+                btn.setBorderPainted(false);
+                btn.addActionListener(e -> showStruk(p));
+                card.add(btn, BorderLayout.EAST);
+            }
+            case "DISAJIKAN" -> {
+                JButton btn = new JButton("Bayar");
+                btn.setBackground(Color.ORANGE);
+                btn.setForeground(Color.WHITE);
+                btn.setOpaque(true);
+                btn.setBorderPainted(false);
+                btn.addActionListener(e -> {
+                    JOptionPane.showMessageDialog(this, "Menunggu Konfirmasi di Kasir");
+                    sys.updateStatusPesanan(p.getId(), "MENUNGGU PEMBAYARAN");
+                    refreshHistory();
+                });
+                card.add(btn, BorderLayout.EAST);
+            }
+            case "MENUNGGU PEMBAYARAN" -> {
+                JButton btn = new JButton("Menunggu");
+                btn.setEnabled(false);
+                btn.setBackground(COLOR_DISABLED);
+                btn.setForeground(TEXT_COLOR_DISABLED);
+                btn.setOpaque(true);
+                btn.setBorderPainted(false);
+                card.add(btn, BorderLayout.EAST);
+            }
         }
         return card;
     }

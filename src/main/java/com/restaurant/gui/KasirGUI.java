@@ -78,7 +78,7 @@ public class KasirGUI extends JFrame {
             for (Pesanan p : all) {
                 String s = p.getStatus().toUpperCase();
                 // Kasir melihat pesanan yang sudah selesai dimasak
-                if (s.equals("SIAP DISAJIKAN") || s.equals("DISAJIKAN")) {
+                if (s.equals("MENUNGGU PEMBAYARAN") || s.equals("DISAJIKAN")) {
                     readyToPay.add(p);
                 }
             }
