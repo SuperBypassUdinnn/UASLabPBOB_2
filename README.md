@@ -39,3 +39,25 @@ Sistem Manajemen Pesanan Restoran ini melayani fungsionalitas utama sebagai beri
 ---
 
 ## 🚀 Cara Menjalankan Kode
+
+1. **Clone repository** ini ke komputer Anda.
+2. **Masuk ke folder** proyek melalui terminal atau command prompt.
+3. Jalankan perintah berikut untuk meng-compile dan menjalankan aplikasi sesuai sistem operasi Anda:
+
+   **Di Windows (PowerShell):**
+   ```powershell
+   # Compile (Mengkompilasi semua file .java)
+   javac (Get-ChildItem -Recurse -Filter *.java).FullName
+
+   # Run (Menjalankan aplikasi)
+   java -cp .\src\main\java\ com.restaurant.app.RestaurantDriver
+   ```
+
+  **Di Linux/Mac (Terminal):**
+  ```bash
+  # Compile (Mengkompilasi semua file .java)
+  javac $(find . -name *.java)
+
+  # Run (Menjalankan aplikasi)
+  java -cp src/main/java com.restaurant.app.RestaurantDriver
+  ```
